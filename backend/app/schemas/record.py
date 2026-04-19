@@ -55,12 +55,25 @@ class RecordFilter(BaseModel):
     offset: int = 0
 
 
+class AIRecognizeRecord(BaseModel):
+    """Single recognized record item"""
+    amount: Optional[float] = None
+    merchant_name: Optional[str] = None
+    date: Optional[str] = None
+    category_guess: Optional[str] = None
+    category_id: Optional[int] = None
+    confidence: float = 0.0
+    record_type: str = "expense"  # "expense" or "income" based on amount sign
+
+
 class AIRecognizeResponse(BaseModel):
     amount: Optional[float] = None
     merchant_name: Optional[str] = None
     date: Optional[str] = None
     category_guess: Optional[str] = None
     category_id: Optional[int] = None
-    confidence: float
-    original_image_url: str
+    confidence: float = 0.0
+    original_image_url: str = ""
     raw_response: Optional[str] = None
+    # All recognized records (new - supports multiple items)
+    records: list[AIRecognizeRecord] = []

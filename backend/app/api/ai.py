@@ -63,47 +63,94 @@ async def recognize_receipt(
     with open(file_path, "wb") as f:
         f.write(contents)
     
-    # Call AI service
-    ai_result = await ai_service.recognize_receipt(image_base64)
-    
-    # Find matching category
-    category_id = None
-    if ai_result.get("category_guess"):
-        category = db.query(Category).filter(
-            Category.user_id == current_user.id,
-            Category.category_type == CategoryType.EXPENSE,
-            Category.name == ai_result["category_guess"]
-        ).first()
-        if category:
-            category_id = category.id
-    
-    # Determine status based on confidence
-    confidence = ai_result.get("confidence", 0.0)
-    auto_confirm = confidence >= settings.AI_CONFIDENCE_THRESHOLD
-    
-    # Create record
-    record = Record(
-        user_id=current_user.id,
-        amount=ai_result.get("amount") or 0,
-        record_type=RecordType.EXPENSE,
-        date=datetime.utcnow(),
-        original_image_url=file_path,
-        ai_confidence=confidence,
-        status=RecordStatus.CONFIRMED if auto_confirm else RecordStatus.PENDING,
-        note=ai_result.get("merchant_name") or "AI识别",
+    # Call AI service (returns a list of recognition results)
+    ai_results = await ai_service.recognize_receipt(image_base64)
+
+    if not isinstance(ai_results, list):
+        ai_results = [ai_results]
+
+    # Build full record list with all AI data
+    all_records = []
+    for ai_result in ai_results:
+        if not ai_result:
+            continue
+
+        # Find matching category
+        category_id = None
+        if ai_result.get("category_guess"):
+            category = db.query(Category).filter(
+                Category.user_id == current_user.id,
+                Category.category_type == CategoryType.EXPENSE,
+                Category.name == ai_result["category_guess"]
+            ).first()
+            if category:
+                category_id = category.id
+
+        amount = ai_result.get("amount") or 0
+        # Negative amount = refund = income
+        record_type = RecordType.INCOME if amount < 0 else RecordType.EXPENSE
+
+        all_records.append({
+            "amount": abs(amount),
+            "record_type": record_type,
+            "merchant_name": ai_result.get("merchant_name"),
+            "date": ai_result.get("date"),
+            "category_id": category_id,
+            "category_guess": ai_result.get("category_guess"),
+            "confidence": ai_result.get("confidence", 0.0),
+            "raw_response": ai_result.get("raw_response"),
+        })
+
+    # Determine overall confidence (average of all records)
+    overall_confidence = (
+        sum(r["confidence"] for r in all_records) / len(all_records)
+        if all_records else 0.0
     )
-    db.add(record)
+    auto_confirm = overall_confidence >= settings.AI_CONFIDENCE_THRESHOLD
+
+    # Create DB records
+    db_records = []
+    for r in all_records:
+        record = Record(
+            user_id=current_user.id,
+            amount=r["amount"],
+            record_type=r["record_type"],
+            date=datetime.utcnow(),
+            original_image_url=file_path,
+            ai_confidence=r["confidence"],
+            status=RecordStatus.CONFIRMED if auto_confirm else RecordStatus.PENDING,
+            note=r["merchant_name"] or "AI识别",
+        )
+        db.add(record)
+        db_records.append(record)
+
     db.commit()
-    db.refresh(record)
-    
-    # Return AI response
+    for record in db_records:
+        db.refresh(record)
+
+    # Build response with all records
+    response_records = [
+        {
+            "amount": r["amount"],
+            "merchant_name": r["merchant_name"],
+            "date": r["date"],
+            "category_guess": r["category_guess"],
+            "category_id": r["category_id"],
+            "confidence": r["confidence"],
+            "record_type": r["record_type"],
+        }
+        for r in all_records
+    ]
+
+    first = all_records[0] if all_records else {}
     return AIRecognizeResponse(
-        amount=ai_result.get("amount"),
-        merchant_name=ai_result.get("merchant_name"),
-        date=ai_result.get("date"),
-        category_guess=ai_result.get("category_guess"),
-        category_id=category_id,
-        confidence=confidence,
+        amount=first.get("amount"),
+        merchant_name=first.get("merchant_name"),
+        date=first.get("date"),
+        category_guess=first.get("category_guess"),
+        category_id=first.get("category_id"),
+        confidence=overall_confidence,
         original_image_url=file_path,
-        raw_response=ai_result.get("raw_response"),
+        raw_response=first.get("raw_response"),
+        records=response_records,
     )

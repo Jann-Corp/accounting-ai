@@ -47,7 +47,7 @@ watch(() => route.path, (p) => { currentPath.value = p })
 <template>
   <div class="min-h-screen bg-gray-100">
     <!-- Mobile Header -->
-    <header class="sticky top-0 z-40 bg-white shadow-sm lg:hidden">
+    <header class="sticky top-0 z-50 bg-white shadow-sm lg:hidden">
       <div class="flex items-center justify-between p-4">
         <button @click="showSidebar = !showSidebar" class="p-2 rounded-lg hover:bg-gray-100">
           <span class="text-xl">☰</span>
