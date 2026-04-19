@@ -17,8 +17,8 @@ class Settings(BaseSettings):
 
     # Qwen API (for AI vision)
     QWEN_API_KEY: Optional[str] = None
-    QWEN_API_BASE: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    QWEN_MODEL: str = "qwen-vl-plus"  # or qwen-vl-max
+    QWEN_API_BASE: str = "https://coding.dashscope.aliyuncs.com/v1"
+    QWEN_MODEL: str = "qwen3.5-plus"  # or qwen-vl-max
 
     # File upload
     UPLOAD_DIR: str = "/tmp/accounting-uploads"
