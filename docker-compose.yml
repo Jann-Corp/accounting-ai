@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/accounting
+      - SECRET_KEY=your-secret-key-change-in-production
+      - QWEN_API_KEY=${QWEN_API_KEY:-}
+      - QWEN_API_BASE=https://dashscope.aliyuncs.com/compatible-mode/v1
+      - QWEN_MODEL=qwen-vl-plus
+      - UPLOAD_DIR=/tmp/accounting-uploads
+      - AI_CONFIDENCE_THRESHOLD=0.85
+    volumes:
+      - ./uploads:/tmp/accounting-uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=accounting
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
