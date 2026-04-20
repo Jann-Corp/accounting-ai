@@ -77,7 +77,7 @@ async function handleFileSelect(e: Event) {
           recognitionProgress.value = 'AI 正在识别中，请稍候...'
         } else if (pollData.status === 'done') {
           stopPolling()
-          const result = pollData.result
+          const result = pollData.result!
           const records: AIRecognizeRecord[] = result.records || []
 
           if (records.length === 0) {
