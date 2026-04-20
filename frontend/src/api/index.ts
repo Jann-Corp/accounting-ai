@@ -140,12 +140,30 @@ export const recordApi = {
 
 // AI API
 export const aiApi = {
-  recognize: (file: File) => {
+  recognizeAsync: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post<AIRecognizeResponse>('/ai/recognize', formData, {
+    return api.post<{ task_id: string; status: string; message: string }>('/ai/recognize', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 15000,  // upload timeout (15s), actual recognition is async
     })
+  },
+
+  getRecognizeResult: (taskId: string) => {
+    return api.get<{
+      task_id: string
+      status: 'pending' | 'done' | 'error'
+      message?: string
+      result?: AIRecognizeResponse
+    }>(`/ai/recognize/${taskId}`)
+  },
+
+  listJobs: () => {
+    return api.get<any[]>('/ai/jobs')
+  },
+
+  getJobDetail: (jobId: number) => {
+    return api.get<any>(`/ai/jobs/${jobId}`)
   },
 }
 

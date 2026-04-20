@@ -17,3 +17,4 @@ class User(Base):
     categories = relationship("Category", back_populates="user", cascade="all, delete-orphan")
     records = relationship("Record", back_populates="user", cascade="all, delete-orphan")
     api_keys = relationship("ApiKey", back_populates="user", cascade="all, delete-orphan")
+    ai_recognition_jobs = relationship("AIRecognitionJob", back_populates="user", cascade="all, delete-orphan")

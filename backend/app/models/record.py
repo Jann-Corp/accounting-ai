@@ -28,6 +28,8 @@ class Record(Base):
     date = Column(DateTime, nullable=False)
     original_image_url = Column(String(500), nullable=True)
     ai_confidence = Column(Float, nullable=True)
+    is_ai_recognized = Column(Integer, default=0, nullable=False)  # 0=manual, 1=AI recognized
+    job_id = Column(Integer, ForeignKey("ai_recognition_jobs.id", ondelete="SET NULL"), nullable=True)  # AI 识别任务 ID
     status = Column(SQLEnum(RecordStatus), default=RecordStatus.CONFIRMED)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -36,3 +38,4 @@ class Record(Base):
     user = relationship("User", back_populates="records")
     wallet = relationship("Wallet", back_populates="records")
     category = relationship("Category", back_populates="records")
+    job = relationship("AIRecognitionJob", foreign_keys=[job_id], lazy="selectin")

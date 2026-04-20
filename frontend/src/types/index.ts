@@ -118,6 +118,16 @@ export interface RecordCreate {
 }
 
 // AI types
+export interface AIRecognizeRecord {
+  amount: number | null
+  merchant_name: string | null
+  date: string | null
+  category_guess: string | null
+  category_id: number | null
+  confidence: number
+  record_type: 'expense' | 'income'
+}
+
 export interface AIRecognizeResponse {
   amount: number | null
   merchant_name: string | null
@@ -127,6 +137,7 @@ export interface AIRecognizeResponse {
   confidence: number
   original_image_url: string | null
   raw_response?: any
+  records: AIRecognizeRecord[]
 }
 
 // Stats types
