@@ -47,7 +47,7 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
             "records": [
                 {
                     "amount": r.get("amount"),
-                    "record_type": r.get("record_type"),
+                    "record_type": r.get("record_type", "expense"),
                     "merchant_name": r.get("merchant_name"),
                     "date": r.get("date"),
                     "category_guess": r.get("category_guess"),

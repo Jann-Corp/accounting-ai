@@ -21,6 +21,7 @@ const error = ref('')
 const taskId = ref<string | null>(null)
 const pollInterval = ref<ReturnType<typeof setInterval> | null>(null)
 const recognitionProgress = ref('')
+const autoSaving = ref(false)
 
 const forms = ref<{
   wallet_id: number
@@ -39,6 +40,20 @@ function stopPolling() {
     clearInterval(pollInterval.value)
     pollInterval.value = null
   }
+}
+
+function todayDateStr() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function parseAiDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return new Date().toISOString().slice(0, 16)
+  const trimmed = dateStr.trim()
+  // Has date part
+  if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) return trimmed.slice(0, 16)
+  // Time only — prepend today
+  if (/^\d{1,2}:\d{2}/.test(trimmed)) return `${todayDateStr()} ${trimmed.trim()}`
+  return new Date().toISOString().slice(0, 16)
 }
 
 async function handleFileSelect(e: Event) {
@@ -96,17 +111,27 @@ async function handleFileSelect(e: Event) {
           }
 
           // Initialize forms
-          forms.value = aiResults.value.map((r: AIRecognizeRecord) => ({
-            wallet_id: selectedWalletId.value || walletStore.wallets[0]?.id || 0,
-            category_id: r.category_id || null,
-            amount: r.amount || 0,
-            record_type: (r.record_type === 'income' ? 'income' : 'expense') as 'expense' | 'income',
-            note: r.merchant_name || '',
-            date: new Date().toISOString().slice(0, 16),
-            saving: false,
-          }))
+          forms.value = aiResults.value.map((r: AIRecognizeRecord) => {
+            const rt = (r.record_type === 'income' ? 'income' : 'expense') as 'expense' | 'income'
+            return {
+              wallet_id: selectedWalletId.value || walletStore.wallets[0]?.id || 0,
+              category_id: r.category_id || null,
+              amount: r.amount || 0,
+              record_type: rt,
+              note: r.merchant_name || '',
+              date: parseAiDate(r.date),
+              saving: false,
+            }
+          })
           recognitionProgress.value = ''
           uploading.value = false
+
+          // Auto-save: if ALL records have confidence >= 0.85, save immediately
+          if (aiResults.value.length > 0 && aiResults.value.every(r => (r.confidence || 0) >= 0.85)) {
+            autoSaving.value = true
+            await handleSaveAll()
+            return
+          }
         } else {
           stopPolling()
           error.value = '识别失败，请重试'
@@ -129,6 +154,9 @@ async function handleFileSelect(e: Event) {
 }
 
 async function handleSaveAll() {
+  if (forms.value.length === 0) return
+  let savedCount = 0
+  let failedCount = 0
   for (let i = 0; i < forms.value.length; i++) {
     const form = forms.value[i]
     if (form.saving) continue
@@ -142,11 +170,16 @@ async function handleSaveAll() {
         note: form.note,
         date: new Date(form.date).toISOString(),
       })
-    } finally {
+      savedCount++
+    } catch (e: any) {
+      failedCount++
       form.saving = false
+      error.value = `保存第 ${i + 1} 条记录失败：${e.response?.data?.detail || e.message || '未知错误'}`
     }
   }
-  router.push('/records')
+  if (failedCount === 0) {
+    router.push('/records')
+  }
 }
 
 function triggerFileInput() {

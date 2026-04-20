@@ -120,14 +120,27 @@ class AIService:
 
     def _mock_recognition(self) -> list:
         """Mock recognition result for testing"""
-        return [{
-            "amount": 128.50,
-            "merchant_name": "测试商家",
-            "date": "2024-01-15",
-            "category_guess": "餐饮",
-            "confidence": 0.85,
-            "raw_response": "Mock response - API key not configured"
-        }]
+        import random
+        return [
+            {
+                "amount": round(random.uniform(10, 200), 2),
+                "merchant_name": "测试商家A",
+                "date": "2024-01-15",
+                "category_guess": "餐饮",
+                "confidence": round(random.uniform(0.7, 0.98), 2),
+                "record_type": "expense",
+                "raw_response": "Mock response - API key not configured",
+            },
+            {
+                "amount": round(random.uniform(5, 50), 2),
+                "merchant_name": "测试商家B",
+                "date": "2024-01-15 14:30",
+                "category_guess": "交通",
+                "confidence": round(random.uniform(0.7, 0.98), 2),
+                "record_type": "expense",
+                "raw_response": "Mock response - API key not configured",
+            },
+        ]
 
 
 ai_service = AIService()
