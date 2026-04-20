@@ -46,7 +46,7 @@ class AIService:
             "temperature": 0.1
         }
         
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=120.0) as client:
             try:
                 response = await client.post(
                     f"{self.api_base}/chat/completions",
