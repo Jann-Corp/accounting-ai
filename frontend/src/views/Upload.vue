@@ -18,8 +18,10 @@ const preview = ref<string | null>(null)
 const uploading = ref(false)
 const aiResults = ref<AIRecognizeRecord[]>([])
 const error = ref('')
+const taskId = ref<string | null>(null)
+const pollInterval = ref<ReturnType<typeof setInterval> | null>(null)
+const recognitionProgress = ref('')
 
-// Editable forms for each recognized record
 const forms = ref<{
   wallet_id: number
   category_id: number | null
@@ -32,48 +34,97 @@ const forms = ref<{
 
 const selectedWalletId = ref<number>(0)
 
+function stopPolling() {
+  if (pollInterval.value) {
+    clearInterval(pollInterval.value)
+    pollInterval.value = null
+  }
+}
+
 async function handleFileSelect(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
 
   // Preview
+  if (preview.value) URL.revokeObjectURL(preview.value)
   preview.value = URL.createObjectURL(file)
 
   // Reset previous results
+  stopPolling()
   aiResults.value = []
   forms.value = []
   error.value = ''
+  taskId.value = null
 
-  // Upload and recognize
+  // Upload and start async recognition
   uploading.value = true
+  recognitionProgress.value = '正在上传图片...'
   try {
-    const res = await aiApi.recognize(file)
+    const res = await aiApi.recognizeAsync(file)
     const data = res.data
-    if (Array.isArray(data)) {
-      aiResults.value = data
-    } else if (data && typeof data === 'object') {
-      aiResults.value = [data as AIRecognizeResponse]
-    } else {
-      aiResults.value = []
-    }
+    taskId.value = data.task_id
 
-    // Initialize forms for each result
-    const allRecords = (data as AIRecognizeResponse).records || []
-    aiResults.value = allRecords
-    forms.value = allRecords.map((r: AIRecognizeRecord) => ({
-      wallet_id: selectedWalletId.value || walletStore.wallets[0]?.id || 0,
-      category_id: r.category_id || null,
-      amount: r.amount || 0,
-      record_type: r.record_type || 'expense',
-      note: r.merchant_name || '',
-      date: new Date().toISOString().slice(0, 16),
-      saving: false,
-    }))
+    // Start polling
+    recognitionProgress.value = 'AI 正在识别中（首次识别可能需要 20-60 秒）...'
+    pollInterval.value = setInterval(async () => {
+      try {
+        const pollRes = await aiApi.getRecognizeResult(taskId.value!)
+        const pollData = pollRes.data
+
+        if (pollData.status === 'pending') {
+          // Still working — just update progress text
+          recognitionProgress.value = 'AI 正在识别中，请稍候...'
+        } else if (pollData.status === 'done') {
+          stopPolling()
+          const result = pollData.result
+          const records: AIRecognizeRecord[] = result.records || []
+
+          if (records.length === 0) {
+            // Fallback to top-level fields
+            aiResults.value = [{
+              amount: result.amount || 0,
+              merchant_name: result.merchant_name || '',
+              date: result.date || '',
+              category_guess: result.category_guess || '',
+              category_id: result.category_id || null,
+              confidence: result.confidence || 0,
+              record_type: 'expense',
+            }]
+          } else {
+            aiResults.value = records
+          }
+
+          // Initialize forms
+          forms.value = aiResults.value.map((r: AIRecognizeRecord) => ({
+            wallet_id: selectedWalletId.value || walletStore.wallets[0]?.id || 0,
+            category_id: r.category_id || null,
+            amount: r.amount || 0,
+            record_type: (r.record_type === 'income' ? 'income' : 'expense') as 'expense' | 'income',
+            note: r.merchant_name || '',
+            date: new Date().toISOString().slice(0, 16),
+            saving: false,
+          }))
+          recognitionProgress.value = ''
+          uploading.value = false
+        } else {
+          stopPolling()
+          error.value = '识别失败，请重试'
+          uploading.value = false
+          // Allow re-upload
+          if (fileInput.value) fileInput.value.value = ''
+        }
+      } catch {
+        // Poll error — keep polling
+      }
+    }, 3000)
   } catch (e: any) {
-    error.value = e.response?.data?.detail || '识别失败，请重试'
-  } finally {
+    stopPolling()
+    error.value = e.response?.data?.detail || '上传失败，请重试'
     uploading.value = false
+    // Allow re-upload
+    if (fileInput.value) fileInput.value.value = ''
+    preview.value = null
   }
 }
 
@@ -113,6 +164,10 @@ onMounted(async () => {
     selectedWalletId.value = walletStore.wallets[0].id
   }
 })
+
+// Cleanup polling on unmount
+import { onUnmounted } from 'vue'
+onUnmounted(() => { stopPolling() })
 </script>
 
 <template>
@@ -149,10 +204,10 @@ onMounted(async () => {
       <img v-else :src="preview" class="max-h-72 mx-auto rounded-lg" alt="Preview" />
     </div>
 
-    <!-- Loading -->
+    <!-- Loading / Polling -->
     <div v-if="uploading" class="text-center py-8">
       <div class="text-4xl mb-4 animate-spin">⏳</div>
-      <p class="text-gray-500">AI 正在识别中...</p>
+      <p class="text-gray-500">{{ recognitionProgress || 'AI 正在识别中...' }}</p>
     </div>
 
     <!-- Error -->

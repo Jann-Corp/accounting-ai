@@ -48,6 +48,11 @@ const routes = [
         name: 'APIKeys',
         component: () => import('@/views/APIKeys.vue'),
       },
+      {
+        path: 'ai-records',
+        name: 'AIRecords',
+        component: () => import('@/views/AIRecords.vue'),
+      },
     ],
   },
 ]

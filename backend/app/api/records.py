@@ -28,6 +28,8 @@ def record_to_response(record: Record) -> RecordResponse:
         date=record.date,
         original_image_url=record.original_image_url,
         ai_confidence=record.ai_confidence,
+        is_ai_recognized=bool(record.is_ai_recognized),
+        job_id=record.job_id,
         status=record.status,
         created_at=record.created_at,
         updated_at=record.updated_at,
@@ -96,6 +98,8 @@ def create_record(
         note=record_data.note,
         date=record_data.date,
         status=RecordStatus.CONFIRMED,
+        job_id=record_data.job_id,
+        is_ai_recognized=1 if record_data.is_ai_recognized else 0,
     )
 
     # Update wallet balance

@@ -14,7 +14,8 @@ class RecordBase(BaseModel):
 
 
 class RecordCreate(RecordBase):
-    pass
+    job_id: Optional[int] = None
+    is_ai_recognized: bool = False
 
 
 class RecordUpdate(BaseModel):
@@ -31,6 +32,8 @@ class RecordResponse(RecordBase):
     user_id: int
     original_image_url: Optional[str] = None
     ai_confidence: Optional[float] = None
+    is_ai_recognized: bool = False
+    job_id: Optional[int] = None
     status: RecordStatus
     created_at: datetime
     updated_at: Optional[datetime] = None

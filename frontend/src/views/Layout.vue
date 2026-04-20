@@ -36,6 +36,7 @@ const navItems = [
   { path: '/categories', label: '分类', icon: '🏷️' },
   { path: '/stats', label: '统计', icon: '📈' },
   { path: '/api-keys', label: 'API Keys', icon: '🔑' },
+  { path: '/ai-records', label: 'AI 记录', icon: '🤖' },
 ]
 
 const currentPath = ref(route.path)

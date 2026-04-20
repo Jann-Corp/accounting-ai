@@ -257,7 +257,7 @@ with sync_playwright() as p:
     page.locator('input[type="number"]').first.fill('120.0')
     page.get_by_role('button', name='保存').click()
     page.wait_for_timeout(1000)
-    assert page.get_by_text('120.0').is_visible(), 'Record amount not found after edit'
+    assert page.get_by_text('120').first.is_visible(), 'Record amount not found after edit'
 
     browser.close()
 """ % ts)

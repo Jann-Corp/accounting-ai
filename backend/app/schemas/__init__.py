@@ -3,3 +3,4 @@ from app.schemas.wallet import WalletCreate, WalletUpdate, WalletResponse, Trans
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
 from app.schemas.record import RecordCreate, RecordUpdate, RecordResponse, RecordFilter, AIRecognizeResponse
 from app.schemas.stats import MonthlyStats, CategoryBreakdown, CategoryBreakdownResponse, TrendPoint, TrendResponse
+from app.schemas.ai_recognition_job import AIRecognitionJobResponse, TaskStatusResponse
