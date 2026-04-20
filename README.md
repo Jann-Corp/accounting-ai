@@ -1,6 +1,6 @@
-# AI 记账小程序 - 后端
+# AI 记账小程序
 
-基于 FastAPI + PostgreSQL + Qwen3.5-plus 的 AI 智能记账后端服务。
+基于 FastAPI + PostgreSQL + Vue 3 的 AI 智能记账应用，支持小票图片 AI 识别。
 
 ## 功能特性
 
@@ -53,11 +53,17 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 # 在项目根目录
 cd ~/projects/accounting-ai
 
-# 启动服务
-docker-compose up -d
+# 复制环境变量并编辑（必须填入 QWEN_API_KEY）
+cp .env.example .env
+
+# 启动所有服务（db + backend + frontend）
+docker compose up --build -d
+
+# 查看服务状态
+docker compose ps
 
 # 查看日志
-docker-compose logs -f backend
+docker compose logs -f backend
 ```
 
 ## 环境变量
@@ -100,7 +106,10 @@ docker-compose logs -f backend
 - `GET /api/v1/records/export` - 导出记录
 
 ### AI 识别
-- `POST /api/v1/ai/recognize` - 上传截图 AI 识别
+- `POST /api/v1/ai/recognize` - 上传小票图片，异步识别（立即返回 job_id）
+- `GET /api/v1/ai/recognize/{job_id}` - 轮询识别任务状态和结果
+- `GET /api/v1/ai/jobs` - 列出当前用户所有识别记录
+- `GET /api/v1/ai/jobs/{job_id}` - 查看识别记录详情
 
 ### 统计
 - `GET /api/v1/stats/monthly` - 月度统计
@@ -110,37 +119,41 @@ docker-compose logs -f backend
 ## 项目结构
 
 ```
-backend/
-├── app/
-│   ├── api/           # API 路由
-│   │   ├── auth.py
-│   │   ├── wallets.py
-│   │   ├── categories.py
-│   │   ├── records.py
-│   │   ├── ai.py
-│   │   ├── stats.py
-│   │   └── export.py
-│   ├── core/          # 核心配置
-│   │   ├── config.py
-│   │   └── security.py
-│   ├── models/         # 数据库模型
-│   │   ├── user.py
-│   │   ├── wallet.py
-│   │   ├── category.py
-│   │   └── record.py
-│   ├── schemas/        # Pydantic 模型
-│   │   ├── user.py
-│   │   ├── wallet.py
-│   │   ├── category.py
-│   │   ├── record.py
-│   │   └── stats.py
-│   ├── services/       # 业务服务
-│   │   └── ai_service.py
-│   ├── database.py
-│   └── main.py
-├── requirements.txt
-├── Dockerfile
-└── .env.example
+.
+├── docker-compose.yml        # 全栈 Docker 部署
+├── .env.example              # 环境变量模板
+├── backend/                  # FastAPI 后端
+│   ├── app/
+│   │   ├── api/              # API 路由
+│   │   │   ├── auth.py
+│   │   │   ├── wallets.py
+│   │   │   ├── categories.py
+│   │   │   ├── records.py
+│   │   │   ├── ai.py
+│   │   │   ├── stats.py
+│   │   │   └── export.py
+│   │   ├── core/             # 核心配置
+│   │   │   ├── config.py
+│   │   │   └── security.py
+│   │   ├── models/           # 数据库模型
+│   │   ├── schemas/          # Pydantic 模型
+│   │   ├── services/         # 业务服务
+│   │   │   └── ai_service.py
+│   │   ├── database.py
+│   │   └── main.py
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   └── .env.example
+└── frontend/                 # Vue 3 前端
+    ├── src/
+    │   ├── api/              # API 调用层（axios）
+    │   ├── views/            # 页面组件
+    │   ├── stores/           # Pinia 状态管理
+    │   └── router/           # Vue Router 配置
+    ├── e2e/                  # Playwright E2E 测试
+    │   └── test_e2e.py
+    ├── Dockerfile            # 多阶段构建（Node → nginx）
+    └── nginx.conf            # SPA 反向代理配置
 ```
 
 ## 数据库模型
