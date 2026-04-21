@@ -20,9 +20,18 @@ router = APIRouter(prefix="/ai", tags=["AI 识别"])
 
 
 def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
-    """Background task: call AI service and persist result to DB job record."""
+    """Background task: call AI service and persist result to DB job record.
+    
+    Auto-save records based on confidence threshold:
+    - confidence >= threshold: create Record with status=CONFIRMED
+    - confidence < threshold: create Record with status=PENDING (user review needed)
+    """
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
+    from app.models.record import Record, RecordStatus
+    from app.models.category import Category
+    from datetime import datetime
+    
     engine = create_engine(str(settings.DATABASE_URL))
     SessionLocal = sessionmaker(bind=engine)
     db = SessionLocal()
@@ -60,6 +69,74 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
             "original_image_url": file_path,
         }
 
+        # Auto-create Record entries based on confidence
+        created_records = []
+        for r in ai_results:
+            if not isinstance(r, dict):
+                continue
+            
+            confidence = r.get("confidence", 0.0)
+            amount = r.get("amount")
+            if amount is None:
+                continue  # Skip invalid records
+            
+            # Determine status based on confidence
+            if confidence >= settings.AI_CONFIDENCE_THRESHOLD:
+                status = RecordStatus.CONFIRMED
+            else:
+                status = RecordStatus.PENDING
+            
+            # Parse date
+            date_str = r.get("date")
+            if date_str:
+                try:
+                    # Try full datetime first
+                    record_date = datetime.strptime(date_str, "%Y-%m-%d %H:%M")
+                except ValueError:
+                    try:
+                        # Try date only
+                        record_date = datetime.strptime(date_str, "%Y-%m-%d")
+                    except ValueError:
+                        record_date = datetime.now()
+            else:
+                record_date = datetime.now()
+            
+            # Find category by guess
+            category_id = None
+            category_guess = r.get("category_guess")
+            if category_guess:
+                cat = db.query(Category).filter(
+                    Category.user_id == job.user_id,
+                    Category.name == category_guess
+                ).first()
+                if cat:
+                    category_id = cat.id
+            
+            # Create record
+            record = Record(
+                user_id=job.user_id,
+                amount=amount,
+                record_type=r.get("record_type", "expense"),
+                note=r.get("merchant_name"),  # Use merchant_name as note
+                date=record_date,
+                category_id=category_id,
+                original_image_url=file_path,
+                ai_confidence=confidence,
+                is_ai_recognized=1,
+                job_id=job.id,
+                status=status,
+            )
+            db.add(record)
+            created_records.append({
+                "record_id": record.id,
+                "status": status.value,
+                "confidence": confidence,
+            })
+        
+        db.commit()
+        
+        # Update job with results
+        result_payload["created_records"] = created_records
         job.result_json = json.dumps(result_payload, ensure_ascii=False)
         job.status = RecognitionStatus.DONE
         job.completed_at = datetime.utcnow()
@@ -224,3 +301,78 @@ async def get_recognition_job_detail(
     if not job:
         raise HTTPException(status_code=404, detail="Not found")
     return job
+
+
+@router.get("/records/pending")
+async def list_pending_ai_records(
+    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
+    """列出所有待确认的 AI 识别记录（status=PENDING）。"""
+    from app.models.record import Record, RecordStatus
+    current_user = _get_current_user(x_api_key, authorization, db)
+    
+    records = db.query(Record).filter(
+        Record.user_id == current_user.id,
+        Record.status == RecordStatus.PENDING,
+        Record.is_ai_recognized == 1,
+    ).order_by(Record.created_at.desc()).all()
+    
+    return records
+
+
+@router.post("/records/{record_id}/confirm")
+async def confirm_ai_record(
+    record_id: int,
+    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
+    """确认一条 AI 识别记录（PENDING → CONFIRMED）。"""
+    from app.models.record import Record, RecordStatus
+    current_user = _get_current_user(x_api_key, authorization, db)
+    
+    record = db.query(Record).filter(
+        Record.id == record_id,
+        Record.user_id == current_user.id,
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    if record.status != RecordStatus.PENDING:
+        raise HTTPException(status_code=400, detail="Record is not pending")
+    
+    record.status = RecordStatus.CONFIRMED
+    db.commit()
+    db.refresh(record)
+    
+    return {"status": "confirmed", "record_id": record_id}
+
+
+@router.post("/records/{record_id}/reject")
+async def reject_ai_record(
+    record_id: int,
+    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
+    """拒绝一条 AI 识别记录（PENDING → REJECTED）。"""
+    from app.models.record import Record, RecordStatus
+    current_user = _get_current_user(x_api_key, authorization, db)
+    
+    record = db.query(Record).filter(
+        Record.id == record_id,
+        Record.user_id == current_user.id,
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    if record.status != RecordStatus.PENDING:
+        raise HTTPException(status_code=400, detail="Record is not pending")
+    
+    record.status = RecordStatus.REJECTED
+    db.commit()
+    db.refresh(record)
+    
+    return {"status": "rejected", "record_id": record_id}
