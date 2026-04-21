@@ -10,7 +10,7 @@ class ApiKey(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     name = Column(String(100), nullable=False)          # e.g. "支付宝自动同步"
     key_hash = Column(String(64), unique=True, nullable=False)  # SHA-256 of the actual key
-    key_prefix = Column(String(8), nullable=False)     # First 8 chars for display
+    key_prefix = Column(String(12), nullable=False)     # First 12 chars for display (e.g. "ak_abc123def4")
     is_active = Column(Boolean, default=True)
     last_used_at = Column(DateTime, nullable=True)
     expires_at = Column(DateTime, nullable=True)

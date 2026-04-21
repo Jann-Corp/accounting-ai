@@ -27,6 +27,9 @@ async function handleCreate() {
     showModal.value = false
     showKeyModal.value = true
     form.value = { name: '', expires_at: null }
+  } catch (error) {
+    console.error('Failed to create API key:', error)
+    alert('创建失败：' + (error.response?.data?.detail || error.message || '未知错误'))
   } finally {
     creating.value = false
   }
