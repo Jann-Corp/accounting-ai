@@ -124,7 +124,7 @@ class AIService:
         return [
             {
                 "amount": round(random.uniform(10, 200), 2),
-                "merchant_name": "测试商家A",
+                "merchant_name": "测试商家 A",
                 "date": "2024-01-15",
                 "category_guess": "餐饮",
                 "confidence": round(random.uniform(0.7, 0.98), 2),
@@ -132,12 +132,12 @@ class AIService:
                 "raw_response": "Mock response - API key not configured",
             },
             {
-                "amount": round(random.uniform(5, 50), 2),
-                "merchant_name": "测试商家B",
-                "date": "2024-01-15 14:30",
-                "category_guess": "交通",
+                "amount": round(random.uniform(100, 3000), 2),
+                "merchant_name": "工资入账",
+                "date": "2024-01-15 09:00",
+                "category_guess": "工资",
                 "confidence": round(random.uniform(0.7, 0.98), 2),
-                "record_type": "expense",
+                "record_type": "income",
                 "raw_response": "Mock response - API key not configured",
             },
         ]
