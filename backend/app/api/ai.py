@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Header, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Header, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from typing import Optional
 import base64
@@ -16,7 +16,7 @@ from app.services.ai_service import ai_service
 from app.models.user import User
 from app.core.config import settings
 
-router = APIRouter(prefix="/ai", tags=["AI识别"])
+router = APIRouter(prefix="/ai", tags=["AI 识别"])
 
 
 def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
@@ -99,28 +99,55 @@ def _get_current_user(x_api_key: Optional[str], authorization: Optional[str], db
 @router.post("/recognize")
 async def recognize_receipt(
     background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
+    request: Request,
+    file: Optional[UploadFile] = File(None),
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db),
 ):
-    """上传小票图片，立即返回 job_id，后台异步识别。"""
+    """上传小票图片，立即返回 job_id，后台异步识别。
+    
+    支持两种格式：
+    1. multipart/form-data（浏览器/Postman）：file 字段
+    2. 原始图片数据（iOS Shortcuts）：request body 直接是图片二进制
+    """
     current_user = _get_current_user(x_api_key, authorization, db)
 
-    if file.content_type not in ["image/jpeg", "image/png", "image/jpg", "image/webp"]:
+    # 获取图片数据和内容类型
+    contents = None
+    content_type = None
+    filename = None
+    
+    if file and file.filename:
+        # multipart/form-data 格式
+        contents = await file.read()
+        content_type = file.content_type
+        filename = file.filename
+    else:
+        # 原始图片数据（iOS Shortcuts）
+        contents = await request.body()
+        content_type = request.headers.get("content-type", "image/jpeg")
+        filename = "upload.jpg"
+
+    if not contents:
+        raise HTTPException(status_code=400, detail="图片数据为空")
+    
+    # 验证图片格式
+    allowed_types = ["image/jpeg", "image/png", "image/jpg", "image/webp"]
+    if content_type and not any(t in content_type.lower() for t in allowed_types):
         raise HTTPException(status_code=400, detail="只支持 JPEG、PNG、WebP 格式的图片")
 
-    contents = await file.read()
     if len(contents) > settings.MAX_UPLOAD_SIZE:
-        raise HTTPException(status_code=400, detail="图片大小不能超过10MB")
+        raise HTTPException(status_code=400, detail="图片大小不能超过 10MB")
 
     image_base64 = base64.b64encode(contents).decode("utf-8")
 
     # Save image
     upload_dir = os.path.join(settings.UPLOAD_DIR, str(current_user.id))
     os.makedirs(upload_dir, exist_ok=True)
-    ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
-    filename = f"{uuid.uuid4()}.{ext}"
+    ext = filename.split(".")[-1] if "." in filename else "jpg"
+    file_id = str(uuid.uuid4())
+    filename = f"{file_id}.{ext}"
     file_path = os.path.join(upload_dir, filename)
     with open(file_path, "wb") as f:
         f.write(contents)
