@@ -10,6 +10,7 @@ class User(Base):
     username = Column(String(50), unique=True, index=True, nullable=False)
     email = Column(String(100), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
+    default_wallet_id = Column(Integer, nullable=True)  # Default wallet for AI records
     created_at = Column(DateTime, server_default=func.now())
 
     # Relationships

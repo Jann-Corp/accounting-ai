@@ -71,6 +71,22 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
 
         # Auto-create Record entries based on confidence
         created_records = []
+        
+        # Get user's default wallet (or first wallet)
+        user_wallets = db.query(Wallet).filter(Wallet.user_id == job.user_id).all()
+        default_wallet = None
+        if user_wallets:
+            # Try to find user's default wallet first
+            user_obj = db.query(User).filter(User.id == job.user_id).first()
+            if user_obj and user_obj.default_wallet_id:
+                default_wallet = db.query(Wallet).filter(
+                    Wallet.id == user_obj.default_wallet_id,
+                    Wallet.user_id == job.user_id
+                ).first()
+            # Fallback to first wallet
+            if not default_wallet:
+                default_wallet = user_wallets[0]
+        
         for r in ai_results:
             if not isinstance(r, dict):
                 continue
@@ -112,12 +128,13 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
                 if cat:
                     category_id = cat.id
             
-            # Create record
+            # Create record with wallet_id
             record = Record(
                 user_id=job.user_id,
+                wallet_id=default_wallet.id if default_wallet else None,
                 amount=amount,
                 record_type=r.get("record_type", "expense"),
-                note=r.get("merchant_name"),  # Use merchant_name as note
+                note=r.get("merchant_name"),
                 date=record_date,
                 category_id=category_id,
                 original_image_url=file_path,
