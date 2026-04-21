@@ -1,10 +1,9 @@
-version: '3.8'
 
 services:
   frontend:
     build: ./frontend
     ports:
-      - "3000:80"
+      - "53000:80"
     depends_on:
       backend:
         condition: service_healthy
@@ -12,8 +11,8 @@ services:
 
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     env_file:
       - .env
     environment:
@@ -37,6 +36,8 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=accounting
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
