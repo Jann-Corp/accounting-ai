@@ -36,3 +36,4 @@ backend/uploads/
 # Frontend
 frontend/dist/
 frontend/node_modules/.vite/
+backend/venv/
