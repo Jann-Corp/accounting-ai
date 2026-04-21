@@ -165,6 +165,18 @@ export const aiApi = {
   getJobDetail: (jobId: number) => {
     return api.get<any>(`/ai/jobs/${jobId}`)
   },
+
+  listPendingRecords: () => {
+    return api.get<any[]>('/ai/records/pending')
+  },
+
+  confirmRecord: (recordId: number) => {
+    return api.post(`/ai/records/${recordId}/confirm`)
+  },
+
+  rejectRecord: (recordId: number) => {
+    return api.post(`/ai/records/${recordId}/reject`)
+  },
 }
 
 // Stats API
