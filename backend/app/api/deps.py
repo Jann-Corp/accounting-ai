@@ -55,9 +55,11 @@ def get_current_user_or_api_key(
     Returns the authenticated User.
     Raises HTTPException on auth failure.
     """
-    print(f"DEBUG get_current_user_or_api_key: x_api_key={x_api_key!r}", flush=True)
     if x_api_key is None:
-        print("DEBUG: x_api_key is None -> 401", flush=True)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
 
     # First try JWT Bearer token (looks like a JWT if it has dots and is long)
     if "." in x_api_key and len(x_api_key) > 32:

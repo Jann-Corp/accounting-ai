@@ -33,7 +33,11 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
     from app.models.wallet import Wallet
     from datetime import datetime
     
-    engine = create_engine(str(settings.DATABASE_URL))
+    # Use DATABASE_URL from environment to ensure we connect to the correct database
+    # In Docker, this should be postgresql://...@db:5432/..., not localhost
+    import os
+    db_url = os.environ.get("DATABASE_URL", str(settings.DATABASE_URL))
+    engine = create_engine(db_url)
     SessionLocal = sessionmaker(bind=engine)
     db = SessionLocal()
 
@@ -129,12 +133,16 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
                 if cat:
                     category_id = cat.id
             
+            # Convert record_type string to enum
+            record_type_str = r.get("record_type", "expense")
+            record_type = RecordType.EXPENSE if record_type_str == "expense" else RecordType.INCOME
+            
             # Create record with wallet_id
             record = Record(
                 user_id=job.user_id,
                 wallet_id=default_wallet.id if default_wallet else None,
                 amount=amount,
-                record_type=r.get("record_type", "expense"),
+                record_type=record_type,
                 note=r.get("merchant_name"),
                 date=record_date,
                 category_id=category_id,
@@ -145,6 +153,14 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
                 status=status,
             )
             db.add(record)
+            
+            # Update wallet balance (same logic as create_record endpoint)
+            if default_wallet:
+                if record_type == RecordType.EXPENSE:
+                    default_wallet.balance -= amount
+                else:
+                    default_wallet.balance += amount
+                db.add(default_wallet)
             created_records.append({
                 "record_id": record.id,
                 "status": status.value,
@@ -329,6 +345,7 @@ async def list_pending_ai_records(
 ):
     """列出所有待确认的 AI 识别记录（status=PENDING）。"""
     from app.models.record import Record, RecordStatus
+    from app.schemas.record import RecordResponse
     current_user = _get_current_user(x_api_key, authorization, db)
     
     records = db.query(Record).filter(
@@ -337,7 +354,8 @@ async def list_pending_ai_records(
         Record.is_ai_recognized == 1,
     ).order_by(Record.created_at.desc()).all()
     
-    return records
+    # Convert to response format to ensure proper boolean conversion
+    return [RecordResponse.model_validate(r) for r in records]
 
 
 @router.post("/records/{record_id}/confirm")
@@ -359,7 +377,7 @@ async def confirm_ai_record(
         raise HTTPException(status_code=404, detail="Record not found")
     
     if record.status != RecordStatus.PENDING:
-        raise HTTPException(status_code=400, detail="Record is not pending")
+        raise HTTPException(status_code=400, detail="只能确认待确认状态的记录")
     
     record.status = RecordStatus.CONFIRMED
     db.commit()
@@ -387,7 +405,7 @@ async def reject_ai_record(
         raise HTTPException(status_code=404, detail="Record not found")
     
     if record.status != RecordStatus.PENDING:
-        raise HTTPException(status_code=400, detail="Record is not pending")
+        raise HTTPException(status_code=400, detail="只能拒绝待确认状态的记录")
     
     record.status = RecordStatus.REJECTED
     db.commit()
