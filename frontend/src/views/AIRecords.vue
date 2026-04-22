@@ -238,7 +238,7 @@ onMounted(() => {
             </div>
             <div class="p-2 bg-gray-50 rounded-lg">
               <p class="text-gray-400 text-xs">日期</p>
-              <p class="font-medium">{{ record.date ? new Date(record.date).toLocaleString('zh-CN') : '-' }}</p>
+              <p class="font-medium">{{ record.date ? new Date(record.date).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) : '-' }}</p>
             </div>
             <div class="p-2 bg-gray-50 rounded-lg">
               <p class="text-gray-400 text-xs">分类</p>
