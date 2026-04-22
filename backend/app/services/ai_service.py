@@ -79,6 +79,7 @@ class AIService:
                     return [
                         {
                             "amount": r.get("amount"),
+                            "record_type": r.get("record_type"),
                             "merchant_name": r.get("merchant_name"),
                             "date": r.get("date"),
                             "category_guess": r.get("category_guess"),
@@ -89,6 +90,7 @@ class AIService:
                         if isinstance(r, dict)
                     ] if records else [{
                         "amount": None,
+                        "record_type": None,
                         "merchant_name": None,
                         "date": None,
                         "category_guess": None,
