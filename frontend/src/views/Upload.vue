@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useRecordStore } from '@/stores/record'
 import { useWalletStore } from '@/stores/wallet'
 import { useCategoryStore } from '@/stores/category'
+import { useAuthStore } from '@/stores/auth'
 import { aiApi } from '@/api'
 import { RecordType } from '@/types'
 import type { AIRecognizeResponse, AIRecognizeRecord } from '@/types'
@@ -12,6 +13,7 @@ const router = useRouter()
 const recordStore = useRecordStore()
 const walletStore = useWalletStore()
 const categoryStore = useCategoryStore()
+const authStore = useAuthStore()
 
 const fileInput = ref<HTMLInputElement>()
 const preview = ref<string | null>(null)
@@ -193,8 +195,15 @@ onMounted(async () => {
     walletStore.fetchWallets(),
     categoryStore.fetchCategories(),
   ])
+  // Use user's default wallet if set, otherwise use first wallet
   if (walletStore.wallets.length > 0) {
-    selectedWalletId.value = walletStore.wallets[0].id
+    const authStore = useAuthStore()
+    const userDefaultWalletId = authStore.user?.default_wallet_id
+    if (userDefaultWalletId && walletStore.wallets.some(w => w.id === userDefaultWalletId)) {
+      selectedWalletId.value = userDefaultWalletId
+    } else {
+      selectedWalletId.value = walletStore.wallets[0].id
+    }
   }
 })
 

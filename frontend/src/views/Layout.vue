@@ -31,12 +31,13 @@ function confirmLogout() {
 const navItems = [
   { path: '/', label: '首页', icon: '📊' },
   { path: '/records', label: '记账', icon: '📝' },
-  { path: '/upload', label: 'AI识别', icon: '🤖' },
+  { path: '/upload', label: 'AI 识别', icon: '🤖' },
   { path: '/wallets', label: '账户', icon: '💼' },
   { path: '/categories', label: '分类', icon: '🏷️' },
   { path: '/stats', label: '统计', icon: '📈' },
   { path: '/api-keys', label: 'API Keys', icon: '🔑' },
   { path: '/ai-records', label: 'AI 记录', icon: '🤖' },
+  { path: '/settings', label: '设置', icon: '⚙️' },
 ]
 
 const currentPath = ref(route.path)
