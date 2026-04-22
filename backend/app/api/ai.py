@@ -28,7 +28,7 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
     """
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
-    from app.models.record import Record, RecordStatus
+    from app.models.record import Record, RecordType, RecordStatus
     from app.models.category import Category
     from app.models.wallet import Wallet
     from datetime import datetime
