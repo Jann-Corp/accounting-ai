@@ -48,14 +48,14 @@ logs-api: ## Show backend API logs (alias)
 
 # ==================== Development ====================
 dev: ## Run backend locally (uvicorn with reload)
-	cd backend && . venv/bin/activate && uvicorn app.main:app --reload --port 8000
+	cd backend && source venv/bin/activate && uvicorn app.main:app --reload --port 8000
 
 dev-frontend: ## Run frontend dev server (Vite)
 	cd frontend && npm run dev
 
 # ==================== Testing ====================
 test: ## Run backend pytest
-	cd backend && . venv/bin/activate && pytest -q
+	cd backend && source venv/bin/activate && pytest -q
 
 test-e2e: ## Run Playwright E2E tests
 	cd frontend && npx playwright test
@@ -66,14 +66,14 @@ test-all: test test-e2e ## Run all tests (backend + E2E)
 install: install-backend install-frontend ## Install all dependencies
 
 install-backend: ## Install backend dependencies (pip install)
-	cd backend && . venv/bin/activate && pip install -r requirements.txt -q
+	cd backend && source venv/bin/activate && pip install -r requirements.txt -q
 
 install-frontend: ## Install frontend dependencies (npm install)
 	cd frontend && npm install
 
 # ==================== Database ====================
 migrate: ## Run Alembic migrations (if configured)
-	cd backend && . venv/bin/activate && alembic upgrade head || echo "No migrations configured"
+	cd backend && source venv/bin/activate && alembic upgrade head || echo "No migrations configured"
 
 db-reset: ## WARNING: Drop and recreate all database volumes
 	@echo "⚠️  This will DELETE all data!"
@@ -85,11 +85,11 @@ db-shell: ## Connect to PostgreSQL shell (psql)
 
 # ==================== Code Quality ====================
 lint: ## Run linters (backend: ruff/flake8, frontend: eslint)
-	cd backend && . venv/bin/activate && ruff check . || echo "ruff not installed"
+	cd backend && source venv/bin/activate && ruff check . || echo "ruff not installed"
 	cd frontend && npx eslint . --ext .ts,.vue || echo "eslint not configured"
 
 format: ## Format code (backend: ruff format, frontend: prettier)
-	cd backend && . venv/bin/activate && ruff format . || echo "ruff not installed"
+	cd backend && source venv/bin/activate && ruff format . || echo "ruff not installed"
 	cd frontend && npx prettier --write "src/**/*.{ts,vue}" || echo "prettier not configured"
 
 # ==================== Quick Start ====================
