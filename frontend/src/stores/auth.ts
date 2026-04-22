@@ -40,6 +40,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function updateDefaultWallet(walletId: number | null) {
+    try {
+      const res = await authApi.updateMe({ default_wallet_id: walletId })
+      user.value = res.data
+    } catch (e: any) {
+      throw new Error(e.response?.data?.detail || '更新失败')
+    }
+  }
+
   function logout() {
     authApi.logout()
     user.value = null
@@ -51,5 +60,5 @@ export const useAuthStore = defineStore('auth', () => {
     fetchUser()
   }
 
-  return { user, token, loading, login, register, logout, fetchUser }
+  return { user, token, loading, login, register, logout, fetchUser, updateDefaultWallet }
 })

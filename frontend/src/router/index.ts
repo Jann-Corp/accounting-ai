@@ -53,6 +53,11 @@ const routes = [
         name: 'AIRecords',
         component: () => import('@/views/AIRecords.vue'),
       },
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('@/views/Settings.vue'),
+      },
     ],
   },
 ]

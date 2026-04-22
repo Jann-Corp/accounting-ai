@@ -5,7 +5,7 @@ from datetime import datetime
 from app.database import get_db
 from app.models.user import User
 from app.models.category import Category, CategoryType
-from app.schemas.user import UserCreate, UserLogin, UserResponse, Token
+from app.schemas.user import UserCreate, UserLogin, UserResponse, Token, UserUpdate
 from app.schemas.category import CategoryResponse
 from app.core.security import get_password_hash, verify_password, create_access_token
 from app.api.deps import get_current_user
@@ -66,4 +66,18 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+@router.patch("/me", response_model=UserResponse)
+def update_me(
+    user_data: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update current user settings (e.g., default_wallet_id)"""
+    if user_data.default_wallet_id is not None:
+        current_user.default_wallet_id = user_data.default_wallet_id
+        db.commit()
+        db.refresh(current_user)
     return current_user

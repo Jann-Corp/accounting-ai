@@ -19,6 +19,7 @@ class UserLogin(BaseModel):
 
 class UserResponse(UserBase):
     id: int
+    default_wallet_id: Optional[int] = None
     created_at: datetime
 
     class Config:
@@ -32,3 +33,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     user_id: Optional[int] = None
+
+
+class UserUpdate(BaseModel):
+    default_wallet_id: Optional[int] = None

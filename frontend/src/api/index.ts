@@ -62,6 +62,9 @@ export const authApi = {
   getMe: () =>
     api.get<User>('/auth/me'),
 
+  updateMe: (data: { default_wallet_id?: number | null }) =>
+    api.patch<User>('/auth/me', data),
+
   logout: () => {
     localStorage.removeItem('token')
   },

@@ -3,6 +3,7 @@ export interface User {
   id: string
   username: string
   email: string
+  default_wallet_id?: number | null
   created_at: string
 }
 
