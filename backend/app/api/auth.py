@@ -39,7 +39,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
         ("医疗", "💊"), ("教育", "📚"), ("居住", "🏠"), ("通讯", "📱"), ("其他", "📦")
     ]
     default_income_categories = [
-        ("工资", "💰"), ("兼职", "💼"), ("投资", "📈"), ("礼金", "🎁"), ("其他", "💵")
+        ("工资", "💰"), ("兼职", "💼"), ("投资", "📈"), ("礼金", "🎁"), ("退款", "💸"), ("其他", "💵")
     ]
     
     for name, icon in default_expense_categories:
