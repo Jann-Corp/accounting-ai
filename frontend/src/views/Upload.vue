@@ -44,18 +44,28 @@ function stopPolling() {
   }
 }
 
+function toLocalDatetimeStr(date: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  const year = date.getFullYear()
+  const month = pad(date.getMonth() + 1)
+  const day = pad(date.getDate())
+  const hour = pad(date.getHours())
+  const min = pad(date.getMinutes())
+  return `${year}-${month}-${day}T${hour}:${min}`
+}
+
 function todayDateStr() {
-  return new Date().toISOString().slice(0, 10)
+  return toLocalDatetimeStr(new Date()).slice(0, 10)
 }
 
 function parseAiDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return new Date().toISOString().slice(0, 16)
+  if (!dateStr) return toLocalDatetimeStr(new Date())
   const trimmed = dateStr.trim()
   // Has date part
   if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) return trimmed.slice(0, 16)
   // Time only — prepend today
   if (/^\d{1,2}:\d{2}/.test(trimmed)) return `${todayDateStr()} ${trimmed.trim()}`
-  return new Date().toISOString().slice(0, 16)
+  return toLocalDatetimeStr(new Date())
 }
 
 async function handleFileSelect(e: Event) {

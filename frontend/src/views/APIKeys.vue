@@ -47,7 +47,7 @@ async function handleToggle(id: number, current: boolean) {
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleString('zh-CN')
+  return new Date(dateStr).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
 }
 
 function formatExpiry(dateStr: string | null) {
