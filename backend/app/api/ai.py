@@ -15,6 +15,7 @@ from app.schemas.ai_recognition_job import (
 from app.services.ai_service import ai_service
 from app.models.user import User
 from app.core.config import settings
+from app.core.logging import logger
 
 router = APIRouter(prefix="/ai", tags=["AI 识别"])
 
@@ -51,7 +52,7 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
         # Call AI service (up to 120s timeout defined in ai_service)
         import asyncio
         ai_results = asyncio.run(ai_service.recognize_receipt(image_base64))
-        print(f"DEBUG AI RECOGNITION RESULTS: {json.dumps(ai_results, ensure_ascii=False, indent=2)}", flush=True)
+        logger.debug(f"AI RECOGNITION RESULTS: {json.dumps(ai_results, ensure_ascii=False, indent=2)}")
 
         # Normalize: ensure list
         if not isinstance(ai_results, list):
@@ -138,7 +139,7 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
             record_type_str = r.get("record_type", "expense")
             record_type = RecordType.EXPENSE if record_type_str == "expense" else RecordType.INCOME
             
-            print(f"DEBUG Creating record: amount={amount}, type={record_type}, date={record_date}, wallet_id={default_wallet.id if default_wallet else None}", flush=True)
+            logger.debug(f"Creating record: amount={amount}, type={record_type}, date={record_date}, wallet_id={default_wallet.id if default_wallet else None}")
             
             # Create record with wallet_id
             record = Record(
@@ -163,9 +164,9 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
                     default_wallet.balance -= amount
                 else:
                     default_wallet.balance += amount
-                print(f"DEBUG Wallet balance updated: {default_wallet.name} new_balance={default_wallet.balance}", flush=True)
+                logger.debug(f"Wallet balance updated: {default_wallet.name} new_balance={default_wallet.balance}")
                 db.add(default_wallet)
-            print(f"DEBUG Record created successfully: id={record.id}, amount={amount}, type={record_type}, date={record_date}", flush=True)
+            logger.info(f"Record created: id={record.id}, amount={amount}, type={record_type}, date={record_date}")
             created_records.append({
                 "record_id": record.id,
                 "status": status.value,

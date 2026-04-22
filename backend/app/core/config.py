@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     # App
     APP_NAME: str = "AI Accounting"
     DEBUG: bool = False
+    LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR
 
     # Database
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/accounting"

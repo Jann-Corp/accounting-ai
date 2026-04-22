@@ -11,6 +11,7 @@ from app.models.category import Category
 from app.schemas.stats import MonthlyStats, CategoryBreakdown, CategoryBreakdownResponse, TrendPoint, TrendResponse
 from app.api.deps import get_current_user
 from app.models.user import User
+from app.core.logging import logger
 
 router = APIRouter(prefix="/stats", tags=["统计"])
 
@@ -32,7 +33,7 @@ def get_monthly_stats(
     start_date = datetime(year, month, 1, 0, 0, 0)
     end_date = datetime(year, month, last_day, 23, 59, 59)
     
-    print(f"DEBUG STATS QUERY: user_id={current_user.id}, year={year}, month={month}, start_date={start_date}, end_date={end_date}", flush=True)
+    logger.debug(f"STATS QUERY: user_id={current_user.id}, year={year}, month={month}, start_date={start_date}, end_date={end_date}")
     
     # Query records
     records = db.query(Record).filter(
@@ -42,9 +43,9 @@ def get_monthly_stats(
         Record.date <= end_date
     ).all()
     
-    print(f"DEBUG STATS RESULT: found {len(records)} records", flush=True)
+    logger.debug(f"STATS RESULT: found {len(records)} records")
     for r in records:
-        print(f"  - record id={r.id}, amount={r.amount}, type={r.record_type}, date={r.date}, status={r.status}", flush=True)
+        logger.debug(f"  - record id={r.id}, amount={r.amount}, type={r.record_type}, date={r.date}, status={r.status}")
     
     total_expense = sum(r.amount for r in records if r.record_type == RecordType.EXPENSE)
     total_income = sum(r.amount for r in records if r.record_type == RecordType.INCOME)
