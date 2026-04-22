@@ -10,7 +10,7 @@ from app.database import get_db
 from app.models.record import Record, RecordType, RecordStatus
 from app.models.wallet import Wallet
 from app.models.category import Category
-from app.api.deps import get_current_user_or_api_key
+from app.models.apikey import ApiKey
 from app.models.user import User
 
 router = APIRouter(prefix="/records", tags=["导出"])
@@ -22,6 +22,7 @@ def export_records(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     record_type: Optional[RecordType] = None,
+    authorization: Optional[str] = Header(None),
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
     db: Session = Depends(get_db),
 ):
@@ -29,9 +30,49 @@ def export_records(
     Export records as CSV or JSON.
     Supports both Bearer token (Authorization header) and X-API-Key header authentication.
     """
-    import sys
-    print(f"DEBUG export endpoint: x_api_key={x_api_key!r}, format={format}", file=sys.stdout, flush=True)
-    current_user = get_current_user_or_api_key(x_api_key=x_api_key, db=db)
+    # Try Bearer token first, then API key
+    from app.core.security import decode_token
+    import hashlib
+    current_user = None
+    
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization[7:]
+        payload = decode_token(token)
+        if payload:
+            user_id = int(payload.get("sub"))
+            current_user = db.query(User).filter(User.id == user_id).first()
+    elif x_api_key:
+        key_hash = hashlib.sha256(x_api_key.encode()).hexdigest()
+        api_key = db.query(ApiKey).filter(
+            ApiKey.key_hash == key_hash,
+            ApiKey.is_active == True,
+        ).first()
+        if api_key:
+            # Check expiry
+            if api_key.expires_at and api_key.expires_at < datetime.utcnow():
+                from fastapi import HTTPException, status
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="API key has expired",
+                )
+            # Update last_used_at
+            api_key.last_used_at = datetime.utcnow()
+            db.commit()
+            current_user = api_key.user
+    
+    if current_user is None:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+    
+    if not current_user:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
 
     query = db.query(Record).filter(Record.user_id == current_user.id)
 

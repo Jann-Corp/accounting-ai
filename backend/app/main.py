@@ -25,13 +25,14 @@ app.add_middleware(
 )
 
 # Mount routers
+# NOTE: export router MUST be before records router because records has /{record_id} wildcard
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(wallets.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
+app.include_router(export.router, prefix="/api/v1")  # Before records!
 app.include_router(records.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
 app.include_router(stats.router, prefix="/api/v1")
-app.include_router(export.router, prefix="/api/v1")
 app.include_router(apikeys.router, prefix="/api/v1")
 
 
