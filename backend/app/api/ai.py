@@ -30,6 +30,7 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
     from sqlalchemy.orm import sessionmaker
     from app.models.record import Record, RecordStatus
     from app.models.category import Category
+    from app.models.wallet import Wallet
     from datetime import datetime
     
     engine = create_engine(str(settings.DATABASE_URL))
