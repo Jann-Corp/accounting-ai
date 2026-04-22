@@ -16,6 +16,7 @@ services:
       - .env
     environment:
       - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@db:5432/accounting
+      - TZ=Asia/Shanghai
     volumes:
       - uploads:/tmp/accounting-uploads
     depends_on:
