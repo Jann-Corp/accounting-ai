@@ -22,6 +22,7 @@ def export_records(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     record_type: Optional[RecordType] = None,
+    authorization: Optional[str] = Header(None),
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
     db: Session = Depends(get_db),
 ):
@@ -31,7 +32,19 @@ def export_records(
     """
     import sys
     print(f"DEBUG export endpoint: x_api_key={x_api_key!r}, format={format}", file=sys.stdout, flush=True)
-    current_user = get_current_user_or_api_key(x_api_key=x_api_key, db=db)
+    
+    # Determine which auth to use
+    auth_token = None
+    if x_api_key:
+        auth_token = x_api_key
+    elif authorization and authorization.startswith("Bearer "):
+        auth_token = authorization[7:]
+    
+    if not auth_token:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    current_user = get_current_user_or_api_key(x_api_key=auth_token, db=db)
 
     query = db.query(Record).filter(Record.user_id == current_user.id)
 

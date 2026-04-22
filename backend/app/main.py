@@ -28,10 +28,11 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(wallets.router, prefix="/api/v1")
 app.include_router(categories.router, prefix="/api/v1")
+# Export must come before records to avoid /export being matched as {record_id}
+app.include_router(export.router, prefix="/api/v1")
 app.include_router(records.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
 app.include_router(stats.router, prefix="/api/v1")
-app.include_router(export.router, prefix="/api/v1")
 app.include_router(apikeys.router, prefix="/api/v1")
 
 
