@@ -25,6 +25,13 @@ class AIService:
         
         prompt = settings.AI_RECOGNITION_PROMPT
         
+        # Prepend current datetime to help AI return accurate dates
+        from datetime import datetime
+        import os
+        tz_offset = os.environ.get("TZ", "Asia/Shanghai")
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S %Z")
+        prompt = f"[系统当前日期时间: {current_time}]\n\n" + prompt
+        
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
