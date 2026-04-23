@@ -101,6 +101,8 @@ export interface Record {
   date: string
   original_image_url: string | null
   ai_confidence: number | null
+  is_ai_recognized: boolean
+  is_suspected_duplicate: boolean
   status: RecordStatus
   created_at: string
   updated_at: string

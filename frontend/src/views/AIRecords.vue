@@ -33,6 +33,7 @@ interface PendingRecord {
   original_image_url: string
   ai_confidence: number
   is_ai_recognized: number
+  is_suspected_duplicate: number
   job_id: number
   status: 'pending' | 'confirmed' | 'rejected'
   created_at: string
@@ -200,7 +201,10 @@ onMounted(() => {
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="text-sm font-medium text-gray-700">记录 #{{ record.id }}</span>
-              <span class="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
+              <span v-if="record.is_suspected_duplicate" class="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                ⚠️ 疑似重复
+              </span>
+              <span v-else class="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
                 ⏳ 待确认
               </span>
             </div>

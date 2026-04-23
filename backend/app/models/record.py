@@ -30,6 +30,7 @@ class Record(Base):
     ai_confidence = Column(Float, nullable=True)
     is_ai_recognized = Column(Integer, default=0, nullable=False)  # 0=manual, 1=AI recognized
     job_id = Column(Integer, ForeignKey("ai_recognition_jobs.id", ondelete="SET NULL"), nullable=True)  # AI 识别任务 ID
+    is_suspected_duplicate = Column(Integer, default=0, nullable=False)  # 0=正常, 1=疑似重复
     status = Column(SQLEnum(RecordStatus), default=RecordStatus.CONFIRMED)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
