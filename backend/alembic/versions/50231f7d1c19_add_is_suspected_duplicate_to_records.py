@@ -17,7 +17,13 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column('records', sa.Column('is_suspected_duplicate', sa.Integer(), nullable=False, server_default='0'))
+    # Check if column exists before adding (idempotent)
+    conn = op.get_bind()
+    result = conn.execute(
+        sa.text("SELECT 1 FROM information_schema.columns WHERE table_name='records' AND column_name='is_suspected_duplicate'")
+    )
+    if not result.fetchone():
+        op.add_column('records', sa.Column('is_suspected_duplicate', sa.Integer(), nullable=False, server_default='0'))
 
 
 def downgrade() -> None:
