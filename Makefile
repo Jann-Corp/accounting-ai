@@ -1,98 +1,97 @@
-.PHONY: help up down build rebuild logs logs-backend logs-db restart ps clean \
-        test test-e2e test-all dev dev-frontend \
-        install install-backend install-frontend \
-        migrate db-reset db-shell \
-        lint format \
-        logs-api
+.PHONY: help up down restart ps logs logs-backend logs-frontend logs-db \
+        build build-backend build-frontend rebuild rebuild-backend rebuild-frontend \
+        deploy deploy-backend deploy-frontend \
+        clean status
+
+# ==================== Configuration ====================
+DOCKER_COMPOSE := docker compose -p accounting-ai
+COMPOSE_FILE := docker-compose.yml
+
+# Default target
+.DEFAULT_GOAL := help
+
+# ==================== Help ====================
+help: ## Show this help message
+	@echo "📊 Accounting AI - Makefile Commands"
+	@echo "======================================"
+	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo ""
+	@echo "💡 Quick Start: make up"
 
 # ==================== Docker ====================
-# DOCKER := sg docker -c "docker compose" for agent sandbox
-DOCKER := docker compose
+up: ## Start all services
+	@echo "🚀 Starting all services..."
+	$(DOCKER_COMPOSE) up -d
+	@echo "✅ Services started!"
 
-help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
-
-up: ## Start all services (docker compose up -d)
-	$(DOCKER) up -d
-
-down: ## Stop all services
-	$(DOCKER) down
+down: ## Stop and remove all containers
+	@echo "🛑 Stopping all services..."
+	$(DOCKER_COMPOSE) down
+	@echo "✅ Services stopped!"
 
 restart: ## Restart all services
-	$(DOCKER) restart
+	@echo "🔄 Restarting all services..."
+	$(DOCKER_COMPOSE) restart
+	@echo "✅ Services restarted!"
 
-build: ## Build images without cache
-	$(DOCKER) build --pull --no-cache
+ps: status ## Show all project containers (alias)
+status: ## Show all project containers status
+	@echo "📦 Container Status for project 'accounting-ai':"
+	$(DOCKER_COMPOSE) ps -a
 
-rebuild: ## Rebuild and restart (useful after code changes)
-	$(DOCKER) build --pull
-	$(DOCKER) up -d --force-recreate
+clean: ## Remove containers and volumes
+	@echo "🧹 Cleaning up..."
+	$(DOCKER_COMPOSE) down -v
 
-ps: ## Show running containers
-	$(DOCKER) ps
+# ==================== Build ====================
+build: build-backend build-frontend ## Build all images (with cache)
 
-clean: ## Remove containers, volumes, and images
-	$(DOCKER) down -v --rmi all
+build-backend: ## Build backend image only
+	@echo "🔨 Building backend image..."
+	$(DOCKER_COMPOSE) build backend
+
+build-frontend: ## Build frontend image only
+	@echo "🔨 Building frontend image..."
+	$(DOCKER_COMPOSE) build frontend
+
+rebuild: rebuild-backend rebuild-frontend ## Rebuild all images (no cache)
+
+rebuild-backend: ## Rebuild backend image only (no cache)
+	@echo "🔄 Rebuilding backend image (no cache)..."
+	$(DOCKER_COMPOSE) build --no-cache backend
+
+rebuild-frontend: ## Rebuild frontend image only (no cache)
+	@echo "🔄 Rebuilding frontend image (no cache)..."
+	$(DOCKER_COMPOSE) build --no-cache frontend
+
+# ==================== Deploy (Build + Replace) ====================
+deploy: deploy-backend deploy-frontend ## Build and deploy all services
+
+deploy-backend: ## Build and deploy backend only (replace container)
+	@echo "🚀 Deploying backend..."
+	$(DOCKER_COMPOSE) up -d --force-recreate --no-deps backend
+	@echo "✅ Backend deployed!"
+
+deploy-frontend: ## Build and deploy frontend only (replace container)
+	@echo "🚀 Deploying frontend..."
+	$(DOCKER_COMPOSE) up -d --force-recreate --no-deps frontend
+	@echo "✅ Frontend deployed!"
 
 # ==================== Logs ====================
-logs: ## Show all logs (follow mode)
-	$(DOCKER) logs --tail=100 -f
+logs: logs-backend ## Show backend logs (default)
 
-logs-backend: ## Show backend logs only
-	$(DOCKER) logs --tail=100 -f backend
+logs-backend: ## Show backend logs (follow)
+	@echo "📋 Backend logs:"
+	$(DOCKER_COMPOSE) logs --tail=200 -f backend
 
-logs-db: ## Show database logs only
-	$(DOCKER) logs --tail=100 -f db
+logs-frontend: ## Show frontend logs (follow)
+	@echo "🎨 Frontend logs:"
+	$(DOCKER_COMPOSE) logs --tail=200 -f frontend
 
-logs-api: ## Show backend API logs (alias)
-	$(DOCKER) logs --tail=100 -f backend
+logs-db: ## Show database logs (follow)
+	@echo "🗄️  Database logs:"
+	$(DOCKER_COMPOSE) logs --tail=200 -f db
 
-# ==================== Development ====================
-dev: ## Run backend locally (uvicorn with reload)
-	cd backend && . venv/bin/activate && uvicorn app.main:app --reload --port 8000
-
-dev-frontend: ## Run frontend dev server (Vite)
-	cd frontend && npm run dev
-
-# ==================== Testing ====================
-test: ## Run backend pytest
-	cd backend && . venv/bin/activate && pytest -q
-
-test-e2e: ## Run Playwright E2E tests
-	cd frontend && npx playwright test
-
-test-all: test test-e2e ## Run all tests (backend + E2E)
-
-# ==================== Dependencies ====================
-install: install-backend install-frontend ## Install all dependencies
-
-install-backend: ## Install backend dependencies (pip install)
-	cd backend && . venv/bin/activate && pip install -r requirements.txt -q
-
-install-frontend: ## Install frontend dependencies (npm install)
-	cd frontend && npm install
-
-# ==================== Database ====================
-migrate: ## Run Alembic migrations (if configured)
-	cd backend && . venv/bin/activate && alembic upgrade head || echo "No migrations configured"
-
-db-reset: ## WARNING: Drop and recreate all database volumes
-	@echo "⚠️  This will DELETE all data!"
-	$(DOCKER) down -v
-	$(DOCKER) up -d db
-
-db-shell: ## Connect to PostgreSQL shell (psql)
-	$(DOCKER) exec -it db psql -U postgres -d accounting
-
-# ==================== Code Quality ====================
-lint: ## Run linters (backend: ruff/flake8, frontend: eslint)
-	cd backend && . venv/bin/activate && ruff check . || echo "ruff not installed"
-	cd frontend && npx eslint . --ext .ts,.vue || echo "eslint not configured"
-
-format: ## Format code (backend: ruff format, frontend: prettier)
-	cd backend && . venv/bin/activate && ruff format . || echo "ruff not installed"
-	cd frontend && npx prettier --write "src/**/*.{ts,vue}" || echo "prettier not configured"
-
-# ==================== Quick Start ====================
-setup: install build up ## Full setup: install deps, build, and start services
-	@echo "✅ Setup complete! Frontend: http://localhost:3000, Backend: http://localhost:8000"
+logs-all: ## Show all logs (follow)
+	@echo "📋 All logs:"
+	$(DOCKER_COMPOSE) logs --tail=200 -f
