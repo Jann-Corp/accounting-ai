@@ -68,13 +68,13 @@ rebuild-frontend: ## Rebuild frontend image only (no cache)
 deploy: deploy-backend deploy-frontend ## Build and deploy all services
 
 deploy-backend: ## Build and deploy backend only (replace container)
-	@echo "🚀 Deploying backend..."
-	$(DOCKER_COMPOSE) up -d --force-recreate --no-deps backend
+	@echo "🚀 Building and deploying backend..."
+	$(DOCKER_COMPOSE) up -d --build --force-recreate --no-deps backend
 	@echo "✅ Backend deployed!"
 
 deploy-frontend: ## Build and deploy frontend only (replace container)
-	@echo "🚀 Deploying frontend..."
-	$(DOCKER_COMPOSE) up -d --force-recreate --no-deps frontend
+	@echo "🚀 Building and deploying frontend..."
+	$(DOCKER_COMPOSE) up -d --build --force-recreate --no-deps frontend
 	@echo "✅ Frontend deployed!"
 
 # ==================== Logs ====================
