@@ -16,10 +16,19 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
+    # AI Provider: "qwen" or "minimax"
+    AI_PROVIDER: str = "qwen"
+    
     # Qwen API (for AI vision)
     QWEN_API_KEY: Optional[str] = None
     QWEN_API_BASE: str = "https://coding.dashscope.aliyuncs.com/v1"
-    QWEN_MODEL: str = "qwen3.5-plus"  # or qwen-vl-max
+    QWEN_MODEL: str = "qwen-vl-max"
+    
+    # Minimax API (for AI vision)
+    MINIMAX_API_KEY: Optional[str] = None
+    MINIMAX_API_BASE: str = "https://api.minimax.chat/v1"
+    MINIMAX_MODEL: str = "MiniMax-VL-01"
+    MINIMAX_GROUP_ID: Optional[str] = None
 
     # File upload
     UPLOAD_DIR: str = "/tmp/accounting-uploads"
