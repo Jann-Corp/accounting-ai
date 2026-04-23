@@ -1,12 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
-import logging
+import traceback
 
 from app.core.config import settings
+from app.core.logging import logger
 from app.api import auth, wallets, categories, records, ai, stats, export, apikeys
-
-logger = logging.getLogger(__name__)
 
 # Run Alembic migrations on startup
 def run_migrations():
@@ -46,7 +45,8 @@ def run_migrations():
                 logger.info("Database is up to date")
                 
     except Exception as e:
-        logger.error(f"Failed to run migrations: {e}")
+        error_msg = f"Failed to run migrations: {e}\n{traceback.format_exc()}"
+        logger.error(error_msg)
 
 # Run migrations on startup
 run_migrations()
