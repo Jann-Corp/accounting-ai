@@ -26,9 +26,8 @@ class Settings(BaseSettings):
     
     # Minimax API (for AI vision)
     MINIMAX_API_KEY: Optional[str] = None
-    MINIMAX_API_BASE: str = "https://api.minimax.chat/v1"
-    MINIMAX_MODEL: str = "MiniMax-VL-01"
-    MINIMAX_GROUP_ID: Optional[str] = None
+    MINIMAX_API_BASE: str = "https://api.minimaxi.com"
+    MINIMAX_MODEL: str = "MiniMax-M2.7"
 
     # File upload
     UPLOAD_DIR: str = "/tmp/accounting-uploads"

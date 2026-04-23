@@ -85,7 +85,6 @@ class AIService:
         api_key = settings.MINIMAX_API_KEY
         api_base = settings.MINIMAX_API_BASE
         model = settings.MINIMAX_MODEL
-        group_id = settings.MINIMAX_GROUP_ID
         
         if not api_key:
             return self._mock_recognition()
@@ -113,8 +112,8 @@ class AIService:
             "temperature": 0.1
         }
         
-        # Minimax requires group_id in the URL
-        url = f"{api_base}/text/chatcompletion_v2?GroupId={group_id}" if group_id else f"{api_base}/text/chatcompletion_v2"
+        # Minimax chat completions API
+        url = f"{api_base}/v1/chat/completions"
         
         async with httpx.AsyncClient(timeout=120.0) as client:
             try:
