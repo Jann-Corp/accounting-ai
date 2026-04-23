@@ -139,16 +139,12 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
             record_type_str = r.get("record_type", "expense")
             record_type = RecordType.EXPENSE if record_type_str == "expense" else RecordType.INCOME
             
-            # Check for duplicate: same user, amount, record_type, and date (ignoring time)
-            from datetime import timedelta
-            duplicate_check_start = record_date.replace(hour=0, minute=0, second=0, microsecond=0)
-            duplicate_check_end = duplicate_check_start + timedelta(days=1)
+            # Check for duplicate: same user, amount, record_type, AND exact datetime
             existing_record = db.query(Record).filter(
                 Record.user_id == job.user_id,
                 Record.amount == amount,
                 Record.record_type == record_type,
-                Record.date >= duplicate_check_start,
-                Record.date < duplicate_check_end,
+                Record.date == record_date,
             ).first()
             
             is_suspected_duplicate = 0
