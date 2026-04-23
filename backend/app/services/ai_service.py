@@ -113,7 +113,7 @@ class AIService:
         }
         
         # Minimax chat completions API
-        url = f"{api_base}/v1/chat/completions"
+        url = f"{api_base}/chat/completions"
         
         async with httpx.AsyncClient(timeout=120.0) as client:
             try:
