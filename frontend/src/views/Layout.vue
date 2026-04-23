@@ -63,14 +63,14 @@ watch(() => route.path, (p) => { currentPath.value = p })
 
     <!-- Sidebar -->
     <aside
-      :class="['fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform lg:translate-x-0 lg:static', showSidebar ? 'translate-x-0' : '-translate-x-full']"
+      :class="['fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform lg:translate-x-0 lg:static flex flex-col', showSidebar ? 'translate-x-0' : '-translate-x-full']"
     >
-      <div class="p-6 border-b">
+      <div class="p-6 border-b flex-shrink-0">
         <h1 class="text-2xl font-bold text-indigo-600">💰 AI记账</h1>
         <p class="text-sm text-gray-500 mt-1">{{ authStore.user?.username }}</p>
       </div>
 
-      <nav class="p-4 space-y-1">
+      <nav class="p-4 space-y-1 flex-1 overflow-y-auto">
         <router-link
           v-for="item in navItems"
           :key="item.path"
@@ -83,7 +83,7 @@ watch(() => route.path, (p) => { currentPath.value = p })
         </router-link>
       </nav>
 
-      <div class="absolute bottom-0 left-0 right-0 p-4 border-t bg-white">
+      <div class="p-4 border-t bg-white flex-shrink-0">
         <div class="text-sm text-gray-500 mb-2">总资产</div>
         <div class="text-2xl font-bold text-green-600">
           ¥{{ walletStore.totalBalance.toFixed(2) }}
