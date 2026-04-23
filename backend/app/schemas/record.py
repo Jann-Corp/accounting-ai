@@ -33,6 +33,7 @@ class RecordResponse(RecordBase):
     original_image_url: Optional[str] = None
     ai_confidence: Optional[float] = None
     is_ai_recognized: bool = False
+    is_suspected_duplicate: bool = False
     job_id: Optional[int] = None
     status: RecordStatus
     created_at: datetime

@@ -1,13 +1,55 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import logging
 
 from app.core.config import settings
-from app.database import Base, engine
 from app.api import auth, wallets, categories, records, ai, stats, export, apikeys
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+logger = logging.getLogger(__name__)
+
+# Run Alembic migrations on startup
+def run_migrations():
+    """Run alembic migrations on startup."""
+    from alembic.config import Config as AlembicConfig
+    from alembic.runtime.migration import MigrationContext
+    from alembic.script import ScriptDirectory
+    from sqlalchemy import create_engine
+    
+    try:
+        db_url = os.environ.get("DATABASE_URL", str(settings.DATABASE_URL))
+        engine = create_engine(db_url)
+        
+        # Get alembic config
+        alembic_cfg = AlembicConfig("/app/alembic.ini")
+        script = ScriptDirectory.from_config(alembic_cfg)
+        
+        with engine.connect() as connection:
+            context = MigrationContext.configure(
+                connection=connection,
+                opts={
+                    'compare_type': True,
+                    'render_as_batch': True,
+                }
+            )
+            
+            # Get current and head revisions
+            current_rev = context.get_current_revision()
+            head_rev = script.get_current_head()
+            
+            if current_rev != head_rev:
+                logger.info(f"Running database migrations: {current_rev} -> {head_rev}")
+                # Run migrations
+                context.run_migrations()
+                logger.info("Migrations completed successfully")
+            else:
+                logger.info("Database is up to date")
+                
+    except Exception as e:
+        logger.error(f"Failed to run migrations: {e}")
+
+# Run migrations on startup
+run_migrations()
 
 app = FastAPI(
     title=settings.APP_NAME,

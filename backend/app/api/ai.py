@@ -139,7 +139,21 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
             record_type_str = r.get("record_type", "expense")
             record_type = RecordType.EXPENSE if record_type_str == "expense" else RecordType.INCOME
             
-            logger.debug(f"Creating record: amount={amount}, type={record_type}, date={record_date}, wallet_id={default_wallet.id if default_wallet else None}")
+            # Check for duplicate: same user, amount, record_type, AND exact datetime
+            existing_record = db.query(Record).filter(
+                Record.user_id == job.user_id,
+                Record.amount == amount,
+                Record.record_type == record_type,
+                Record.date == record_date,
+            ).first()
+            
+            is_suspected_duplicate = 0
+            if existing_record:
+                logger.info(f"Suspected duplicate found: existing_record_id={existing_record.id}, new_amount={amount}, date={record_date}")
+                is_suspected_duplicate = 1
+                status = RecordStatus.PENDING  # Force PENDING for duplicate
+            
+            logger.debug(f"Creating record: amount={amount}, type={record_type}, date={record_date}, wallet_id={default_wallet.id if default_wallet else None}, is_suspected_duplicate={is_suspected_duplicate}")
             
             # Create record with wallet_id
             record = Record(
@@ -155,6 +169,7 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
                 is_ai_recognized=1,
                 job_id=job.id,
                 status=status,
+                is_suspected_duplicate=is_suspected_duplicate,
             )
             db.add(record)
             
