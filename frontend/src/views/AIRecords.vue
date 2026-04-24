@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { aiApi } from '@/api'
+import { useAIRecordStore } from '@/stores/aiRecord'
 
 interface RecognizedRecord {
   amount: number
@@ -23,30 +24,17 @@ interface Job {
   records: RecognizedRecord[]
 }
 
-interface PendingRecord {
-  id: number
-  amount: number
-  record_type: 'expense' | 'income'
-  note: string
-  date: string
-  category_id: number | null
-  original_image_url: string
-  ai_confidence: number
-  is_ai_recognized: number
-  is_suspected_duplicate: number
-  job_id: number
-  status: 'pending' | 'confirmed' | 'rejected'
-  created_at: string
-  updated_at: string
-}
-
 const jobs = ref<Job[]>([])
-const pendingRecords = ref<PendingRecord[]>([])
 const loading = ref(false)
 const loadingPending = ref(false)
 const expandedId = ref<number | null>(null)
 const activeTab = ref<'jobs' | 'pending'>('pending')
 const processingRecords = ref<Set<number>>(new Set())
+
+const aiRecordStore = useAIRecordStore()
+
+// 使用 store 中的 pending records
+const pendingRecords = aiRecordStore.pendingRecords
 
 function parseResult(job: Job): RecognizedRecord[] {
   if (!job.result_json) return []
@@ -103,8 +91,7 @@ async function refresh() {
 async function refreshPending() {
   loadingPending.value = true
   try {
-    const res = await aiApi.listPendingRecords()
-    pendingRecords.value = res.data
+    await aiRecordStore.fetchPendingRecords()
   } finally {
     loadingPending.value = false
   }
@@ -114,8 +101,7 @@ async function confirmRecord(recordId: number) {
   if (processingRecords.value.has(recordId)) return
   processingRecords.value.add(recordId)
   try {
-    await aiApi.confirmRecord(recordId)
-    pendingRecords.value = pendingRecords.value.filter(r => r.id !== recordId)
+    await aiRecordStore.confirmRecord(recordId)
   } catch (e: any) {
     alert('确认失败：' + (e.response?.data?.detail || e.message))
   } finally {
@@ -127,8 +113,7 @@ async function rejectRecord(recordId: number) {
   if (processingRecords.value.has(recordId)) return
   processingRecords.value.add(recordId)
   try {
-    await aiApi.rejectRecord(recordId)
-    pendingRecords.value = pendingRecords.value.filter(r => r.id !== recordId)
+    await aiRecordStore.rejectRecord(recordId)
   } catch (e: any) {
     alert('拒绝失败：' + (e.response?.data?.detail || e.message))
   } finally {
@@ -139,6 +124,8 @@ async function rejectRecord(recordId: number) {
 onMounted(() => {
   refreshPending()
   refresh()
+  // 标记为已查看
+  aiRecordStore.markAsViewed()
 })
 </script>
 

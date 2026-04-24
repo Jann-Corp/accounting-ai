@@ -3,17 +3,22 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute, RouterView } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useWalletStore } from '@/stores/wallet'
+import { useAIRecordStore } from '@/stores/aiRecord'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const walletStore = useWalletStore()
+const aiRecordStore = useAIRecordStore()
 
 const showSidebar = ref(false)
 
 onMounted(async () => {
   if (authStore.user) {
-    await walletStore.fetchWallets()
+    await Promise.all([
+      walletStore.fetchWallets(),
+      aiRecordStore.fetchPendingRecords(),
+    ])
   }
 })
 
@@ -36,14 +41,26 @@ const navItems = [
   { path: '/categories', label: '分类', icon: '🏷️' },
   { path: '/stats', label: '统计', icon: '📈' },
   { path: '/api-keys', label: 'API Keys', icon: '🔑' },
-  { path: '/ai-records', label: 'AI 记录', icon: '🤖' },
+  { path: '/ai-records', label: 'AI 记录', icon: '🤖', hasBadge: true },
   { path: '/settings', label: '设置', icon: '⚙️' },
 ]
 
 const currentPath = ref(route.path)
+let isFirstRoute = true
 
 // Keep currentPath in sync with route changes
-watch(() => route.path, (p) => { currentPath.value = p })
+watch(() => route.path, (p) => { 
+  currentPath.value = p
+  // 如果用户进入 AI 记录页面，标记为已查看
+  if (p === '/ai-records') {
+    aiRecordStore.markAsViewed()
+  }
+  // 每次路由变化时重新获取待确认记录（除了第一次）
+  if (!isFirstRoute && authStore.user) {
+    aiRecordStore.fetchPendingRecords()
+  }
+  isFirstRoute = false
+})
 </script>
 
 <template>
@@ -78,8 +95,22 @@ watch(() => route.path, (p) => { currentPath.value = p })
           @click="showSidebar = false"
           :class="['flex items-center gap-3 px-4 py-3 rounded-lg transition', currentPath === item.path ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50']"
         >
-          <span class="text-xl">{{ item.icon }}</span>
-          <span>{{ item.label }}</span>
+          <span class="text-xl relative">
+            {{ item.icon }}
+            <!-- 动态小红点 -->
+            <span
+              v-if="item.hasBadge && aiRecordStore.showBadge"
+              class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border-2 border-white"
+            />
+          </span>
+          <span class="flex-1">{{ item.label }}</span>
+          <!-- 数字提示 -->
+          <span
+            v-if="item.hasBadge && aiRecordStore.pendingCount > 0"
+            class="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full"
+          >
+            {{ aiRecordStore.pendingCount }}
+          </span>
         </router-link>
       </nav>
 
