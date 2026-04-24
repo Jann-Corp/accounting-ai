@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useWalletStore } from '@/stores/wallet'
 import { useRecordStore } from '@/stores/record'
 import { useCategoryStore } from '@/stores/category'
 import { useAuthStore } from '@/stores/auth'
+import { useAIRecordStore } from '@/stores/aiRecord'
 import { statsApi } from '@/api'
 import type { MonthlyStats, CategoryBreakdown } from '@/types'
 
+const router = useRouter()
 const walletStore = useWalletStore()
 const recordStore = useRecordStore()
 const categoryStore = useCategoryStore()
 const authStore = useAuthStore()
+const aiRecordStore = useAIRecordStore()
 
 const monthlyStats = ref<MonthlyStats | null>(null)
 const categoryBreakdown = ref<CategoryBreakdown[]>([])
@@ -23,6 +27,7 @@ onMounted(async () => {
     walletStore.fetchWallets(),
     recordStore.fetchRecords({ limit: 5 }),
     categoryStore.fetchCategories(),
+    aiRecordStore.fetchPendingRecords(),
   ])
   try {
     const [statsRes, breakdownRes] = await Promise.all([
@@ -35,6 +40,11 @@ onMounted(async () => {
     console.error('Failed to load stats', e)
   }
 })
+
+function goToAIRecords() {
+  aiRecordStore.markAsViewed()
+  router.push('/ai-records')
+}
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(amount)
@@ -96,6 +106,37 @@ function formatDate(dateStr: string) {
           </span>
         </div>
       </div>
+    </div>
+
+    <!-- AI Records Entry -->
+    <div v-if="aiRecordStore.hasPendingRecords" class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl shadow-sm border-2 border-yellow-200 overflow-hidden">
+      <button
+        @click="goToAIRecords"
+        class="w-full p-5 flex items-center justify-between hover:from-yellow-100 hover:to-orange-100 transition-colors"
+      >
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-yellow-400 rounded-2xl flex items-center justify-center relative">
+            <span class="text-2xl">🤖</span>
+            <!-- 动态小红点 -->
+            <span
+              v-if="aiRecordStore.showBadge"
+              class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse border-2 border-white"
+            />
+          </div>
+          <div class="text-left">
+            <h3 class="font-semibold text-gray-800">有待确认的 AI 识别记录</h3>
+            <p class="text-sm text-gray-500">
+              共 {{ aiRecordStore.pendingCount }} 条记录待确认
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="bg-yellow-400 text-yellow-900 text-xs font-bold px-2.5 py-1 rounded-full">
+            立即查看
+          </span>
+          <span class="text-yellow-500 text-xl">›</span>
+        </div>
+      </button>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
