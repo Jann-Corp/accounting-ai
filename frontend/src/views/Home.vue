@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useAIRecordStore } from '@/stores/aiRecord'
 import { statsApi } from '@/api'
 import type { MonthlyStats, CategoryBreakdown } from '@/types'
+import RecordModal from '@/components/RecordModal.vue'
 
 const router = useRouter()
 const walletStore = useWalletStore()
@@ -19,6 +20,7 @@ const aiRecordStore = useAIRecordStore()
 const monthlyStats = ref<MonthlyStats | null>(null)
 const categoryBreakdown = ref<CategoryBreakdown[]>([])
 const recentRecords = computed(() => recordStore.records.slice(0, 5))
+const showRecordModal = ref(false)
 
 const currentMonth = new Date().toLocaleString('zh-CN', { year: 'numeric', month: 'long' })
 
@@ -58,9 +60,18 @@ function formatDate(dateStr: string) {
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div>
-      <h1 class="text-2xl font-bold text-gray-800">你好，{{ authStore.user?.username || '用户' }}</h1>
-      <p class="text-gray-500">{{ currentMonth }}</p>
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">你好，{{ authStore.user?.username || '用户' }}</h1>
+        <p class="text-gray-500">{{ currentMonth }}</p>
+      </div>
+      <button
+        @click="showRecordModal = true"
+        class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 flex items-center gap-2"
+      >
+        <span>✏️</span>
+        <span>记一笔</span>
+      </button>
     </div>
 
     <!-- Balance Cards -->
@@ -196,4 +207,7 @@ function formatDate(dateStr: string) {
       </div>
     </div>
   </div>
+
+  <!-- Record Modal -->
+  <RecordModal :show="showRecordModal" @close="showRecordModal = false" />
 </template>

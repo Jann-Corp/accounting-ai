@@ -5,12 +5,14 @@ import { useWalletStore } from '@/stores/wallet'
 import { useCategoryStore } from '@/stores/category'
 import { RecordType } from '@/types'
 import type { RecordStatus } from '@/types'
+import RecordModal from '@/components/RecordModal.vue'
 
 const recordStore = useRecordStore()
 const walletStore = useWalletStore()
 const categoryStore = useCategoryStore()
 
 const showModal = ref(false)
+const showRecordModal = ref(false)
 const editingRecord = ref<any>(null)
 const filterType = ref<RecordType | ''>('')
 const filterStatus = ref<RecordStatus | ''>('')
@@ -102,10 +104,11 @@ function formatDate(dateStr: string) {
     <div class="flex justify-between items-center">
       <h1 class="text-2xl font-bold text-gray-800">📝 记账记录</h1>
       <button
-        @click="openAddModal"
-        class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+        @click="showRecordModal = true"
+        class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2"
       >
-        + 添加记录
+        <span>✏️</span>
+        <span>记一笔</span>
       </button>
     </div>
 
@@ -202,4 +205,7 @@ function formatDate(dateStr: string) {
       </div>
     </div>
   </div>
+
+  <!-- Record Modal -->
+  <RecordModal :show="showRecordModal" @close="showRecordModal = false" />
 </template>
