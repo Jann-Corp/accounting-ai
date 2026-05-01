@@ -326,18 +326,31 @@ async def get_recognition_result(job_id: int, db: Session = Depends(get_db)):
     }
 
 
-@router.get("/jobs", response_model=list[AIRecognitionJobResponse])
+@router.get("/jobs")
 async def list_recognition_jobs(
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
     authorization: Optional[str] = Header(None),
+    limit: int = 20,
+    offset: int = 0,
     db: Session = Depends(get_db),
 ):
-    """列出当前用户的所有识别记录（按时间倒序）。"""
+    """列出当前用户的识别记录（按时间倒序，支持分页）。"""
     current_user = _get_current_user(x_api_key, authorization, db)
+    # Get total count
+    total = db.query(AIRecognitionJob).filter(
+        AIRecognitionJob.user_id == current_user.id
+    ).count()
+    # Get paginated jobs
     jobs = db.query(AIRecognitionJob).filter(
         AIRecognitionJob.user_id == current_user.id
-    ).order_by(AIRecognitionJob.created_at.desc()).all()
-    return jobs
+    ).order_by(AIRecognitionJob.created_at.desc()).limit(limit).offset(offset).all()
+    
+    return {
+        "data": jobs,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @router.get("/jobs/{job_id}")
@@ -356,6 +369,56 @@ async def get_recognition_job_detail(
     if not job:
         raise HTTPException(status_code=404, detail="Not found")
     return job
+
+
+@router.get("/records")
+async def list_ai_records(
+    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    authorization: Optional[str] = Header(None),
+    page: int = 1,
+    page_size: int = 10,
+    db: Session = Depends(get_db),
+):
+    """列出所有 AI 识别记录（分页）。"""
+    from app.models.record import Record, RecordStatus
+    from app.schemas.record import RecordResponse
+    current_user = _get_current_user(x_api_key, authorization, db)
+    
+    # Validate pagination
+    if page < 1:
+        page = 1
+    if page_size < 1:
+        page_size = 10
+    if page_size > 100:
+        page_size = 100
+    
+    # Calculate offset
+    offset = (page - 1) * page_size
+    
+    # Get total count
+    total = db.query(Record).filter(
+        Record.user_id == current_user.id,
+        Record.is_ai_recognized == 1,
+    ).count()
+    
+    # Get paginated records
+    records = db.query(Record).filter(
+        Record.user_id == current_user.id,
+        Record.is_ai_recognized == 1,
+    ).order_by(Record.created_at.desc()).limit(page_size).offset(offset).all()
+    
+    # Calculate total pages
+    total_pages = (total + page_size - 1) // page_size if total > 0 else 0
+    
+    return {
+        "data": [RecordResponse.model_validate(r) for r in records],
+        "pagination": {
+            "page": page,
+            "page_size": page_size,
+            "total": total,
+            "total_pages": total_pages,
+        },
+    }
 
 
 @router.get("/records/pending")
@@ -414,8 +477,8 @@ async def reject_ai_record(
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db),
 ):
-    """拒绝一条 AI 识别记录（PENDING → REJECTED）。"""
-    from app.models.record import Record, RecordStatus
+    """拒绝一条 AI 识别记录（删除）。"""
+    from app.models.record import Record, RecordStatus, RecordType
     current_user = _get_current_user(x_api_key, authorization, db)
     
     record = db.query(Record).filter(
@@ -428,8 +491,19 @@ async def reject_ai_record(
     if record.status != RecordStatus.PENDING:
         raise HTTPException(status_code=400, detail="只能拒绝待确认状态的记录")
     
-    record.status = RecordStatus.REJECTED
+    # Restore wallet balance if this was an AI recognized record
+    if record.is_ai_recognized and record.wallet_id:
+        from app.models.wallet import Wallet
+        wallet = db.query(Wallet).filter(Wallet.id == record.wallet_id).first()
+        if wallet:
+            if record.record_type == RecordType.EXPENSE:
+                wallet.balance += record.amount
+            else:
+                wallet.balance -= record.amount
+            db.add(wallet)
+    
+    # Delete the rejected record
+    db.delete(record)
     db.commit()
-    db.refresh(record)
     
     return {"status": "rejected", "record_id": record_id}
