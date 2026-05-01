@@ -33,5 +33,5 @@ jobs:
         run: |
           docker compose ps
           NGINX_PORT=$(grep '^FRONTEND_PORT=' ${ENV_FILE} | cut -d '=' -f2)
-          curl -s http://localhost:${NGINX_PORT}/health | jq .
-          curl -s http://localhost:${NGINX_PORT}/health | jq .
+          curl -s http://localhost:${NGINX_PORT}/health
+          curl -s http://localhost:${NGINX_PORT}/health
