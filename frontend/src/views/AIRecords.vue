@@ -79,7 +79,7 @@ async function refresh() {
   loading.value = true
   try {
     const res = await aiApi.listJobs()
-    jobs.value = res.data.map((j: any) => ({
+    jobs.value = res.data.data.map((j: any) => ({
       ...j,
       records: parseResult(j),
     }))
