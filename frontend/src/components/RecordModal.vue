@@ -45,6 +45,14 @@ const manualForm = ref({
 const manualSaving = ref(false)
 const manualError = ref('')
 
+// Filter categories by record type
+const filteredCategories = computed(() => {
+  if (manualForm.value.record_type === 'income') {
+    return categoryStore.categories.filter(c => c.category_type === 'income')
+  }
+  return categoryStore.categories.filter(c => c.category_type === 'expense')
+})
+
 // Reset when modal opens
 watch(() => props.show, async (val) => {
   if (val) {
@@ -309,13 +317,13 @@ function handleClose() {
             <!-- Record Type Toggle -->
             <div class="flex gap-2">
               <button
-                @click="manualForm.record_type = 'expense'"
+                @click="manualForm.record_type = 'expense'; manualForm.category_id = null"
                 :class="['flex-1 py-2 rounded-lg font-medium transition-colors', manualForm.record_type === 'expense' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600']"
               >
                 💸 支出
               </button>
               <button
-                @click="manualForm.record_type = 'income'"
+                @click="manualForm.record_type = 'income'; manualForm.category_id = null"
                 :class="['flex-1 py-2 rounded-lg font-medium transition-colors', manualForm.record_type === 'income' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600']"
               >
                 💰 收入
@@ -348,7 +356,7 @@ function handleClose() {
               <label class="block text-sm font-medium text-gray-700 mb-1">分类</label>
               <select v-model="manualForm.category_id" class="w-full border rounded-lg px-3 py-2">
                 <option :value="null">未分类</option>
-                <option v-for="c in categoryStore.categories" :key="c.id" :value="c.id">
+                <option v-for="c in filteredCategories" :key="c.id" :value="c.id">
                   {{ c.icon }} {{ c.name }}
                 </option>
               </select>
