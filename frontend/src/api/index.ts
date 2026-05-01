@@ -161,8 +161,8 @@ export const aiApi = {
     }>(`/ai/recognize/${taskId}`)
   },
 
-  listJobs: () => {
-    return api.get<any[]>('/ai/jobs')
+  listJobs: (params?: { limit?: number; offset?: number }) => {
+    return api.get<{ data: any[]; total: number; limit: number; offset: number }>('/ai/jobs', { params })
   },
 
   getJobDetail: (jobId: number) => {
@@ -171,6 +171,10 @@ export const aiApi = {
 
   listPendingRecords: () => {
     return api.get<any[]>('/ai/records/pending')
+  },
+
+  listRecords: (params?: { page?: number; page_size?: number }) => {
+    return api.get<{ data: any[]; pagination: { page: number; page_size: number; total: number; total_pages: number } }>('/ai/records', { params })
   },
 
   confirmRecord: (recordId: number) => {

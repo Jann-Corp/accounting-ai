@@ -4,6 +4,7 @@ import { useRouter, useRoute, RouterView } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useWalletStore } from '@/stores/wallet'
 import { useAIRecordStore } from '@/stores/aiRecord'
+import RecordModal from '@/components/RecordModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -12,6 +13,7 @@ const walletStore = useWalletStore()
 const aiRecordStore = useAIRecordStore()
 
 const showSidebar = ref(false)
+const showRecordModal = ref(false)
 
 onMounted(async () => {
   if (authStore.user) {
@@ -35,8 +37,8 @@ function confirmLogout() {
 
 const navItems = [
   { path: '/', label: '首页', icon: '📊' },
-  { path: '/records', label: '记账', icon: '📝' },
-  { path: '/upload', label: 'AI 识别', icon: '🤖' },
+  { path: '/records', label: '记账记录', icon: '📝' },
+  { path: '/upload', label: '上传小票', icon: '🧾' },
   { path: '/wallets', label: '账户', icon: '💼' },
   { path: '/categories', label: '分类', icon: '🏷️' },
   { path: '/stats', label: '统计', icon: '📈' },
@@ -133,5 +135,16 @@ watch(() => route.path, (p) => {
     <main class="flex-1 p-6 lg:p-8">
       <RouterView />
     </main>
+
+    <!-- Floating Action Button -->
+    <button
+      @click="showRecordModal = true"
+      class="fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 flex items-center justify-center text-2xl lg:bottom-8 lg:right-8 z-30"
+    >
+      ✏️
+    </button>
+
+    <!-- Record Modal -->
+    <RecordModal :show="showRecordModal" @close="showRecordModal = false" />
   </div>
 </template>
