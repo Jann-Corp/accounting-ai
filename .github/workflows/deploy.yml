@@ -1,0 +1,34 @@
+name: Personal Finance Production Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  ENV_FILE: "/root/github_repos/accounting-ai/.env"
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy .env file
+        run: cp ${ENV_FILE} .env
+
+      - name: Build and start containers
+        run: make deploy
+
+  health_check:
+    runs-on: self-hosted
+    needs: deploy
+    
+    steps:
+      - name: Health check
+        run: |
+          docker compose ps
+          NGINX_PORT=$(grep '^FRONTEND_PORT=' ${ENV_FILE} | cut -d '=' -f2)
+          curl -s http://localhost:${NGINX_PORT}/health | jq .
