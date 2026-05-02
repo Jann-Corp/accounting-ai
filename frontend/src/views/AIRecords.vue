@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { aiApi } from '@/api'
 import { useAIRecordStore } from '@/stores/aiRecord'
 
@@ -26,10 +26,17 @@ interface Job {
 
 const jobs = ref<Job[]>([])
 const loading = ref(false)
+const loadingMore = ref(false)
 const loadingPending = ref(false)
 const expandedId = ref<number | null>(null)
 const activeTab = ref<'jobs' | 'pending'>('pending')
 const processingRecords = ref<Set<number>>(new Set())
+const hasMore = ref(true)
+const offset = ref(0)
+const LIMIT = 20
+const sentinel = ref<HTMLElement | null>(null)
+
+let sentinelObserver: IntersectionObserver | null = null
 
 const aiRecordStore = useAIRecordStore()
 
@@ -77,14 +84,35 @@ function toggleExpand(id: number) {
 
 async function refresh() {
   loading.value = true
+  offset.value = 0
+  hasMore.value = true
   try {
-    const res = await aiApi.listJobs({ limit: 1000 })
+    const res = await aiApi.listJobs({ limit: LIMIT, offset: 0 })
     jobs.value = res.data.data.map((j: any) => ({
       ...j,
       records: parseResult(j),
     }))
+    offset.value = res.data.data.length
+    hasMore.value = offset.value < res.data.total
   } finally {
     loading.value = false
+  }
+}
+
+async function loadMore() {
+  if (loadingMore.value || !hasMore.value) return
+  loadingMore.value = true
+  try {
+    const res = await aiApi.listJobs({ limit: LIMIT, offset: offset.value })
+    const newJobs = res.data.data.map((j: any) => ({
+      ...j,
+      records: parseResult(j),
+    }))
+    jobs.value.push(...newJobs)
+    offset.value += newJobs.length
+    hasMore.value = offset.value < res.data.total
+  } finally {
+    loadingMore.value = false
   }
 }
 
@@ -121,11 +149,24 @@ async function rejectRecord(recordId: number) {
   }
 }
 
-onMounted(() => {
-  refreshPending()
-  refresh()
-  // 标记为已查看
+onMounted(async () => {
+  await Promise.all([refresh(), refreshPending()])
   aiRecordStore.markAsViewed()
+
+  // Setup intersection observer for infinite scroll
+  sentinelObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && activeTab.value === 'jobs') {
+      loadMore()
+    }
+  }, { threshold: 0.1 })
+
+  if (sentinel.value) {
+    sentinelObserver.observe(sentinel.value)
+  }
+})
+
+onUnmounted(() => {
+  sentinelObserver?.disconnect()
 })
 </script>
 
@@ -387,6 +428,12 @@ onMounted(() => {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Infinite scroll sentinel -->
+      <div ref="sentinel" class="h-10 flex items-center justify-center">
+        <span v-if="loadingMore" class="text-gray-400 text-sm">加载更多...</span>
+        <span v-else-if="!hasMore && jobs.length > 0" class="text-gray-400 text-sm">没有更多了</span>
       </div>
     </div>
   </div>
