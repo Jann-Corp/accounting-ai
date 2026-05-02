@@ -37,13 +37,12 @@ function confirmLogout() {
 
 const navItems = [
   { path: '/', label: '首页', icon: '📊' },
-  { path: '/records', label: '记账记录', icon: '📝' },
-  { path: '/upload', label: '上传小票', icon: '🧾' },
+  { path: '/records', label: '流水', icon: '📝' },
   { path: '/wallets', label: '账户', icon: '💼' },
   { path: '/categories', label: '分类', icon: '🏷️' },
   { path: '/stats', label: '统计', icon: '📈' },
   { path: '/api-keys', label: 'API Keys', icon: '🔑' },
-  { path: '/ai-records', label: 'AI 记录', icon: '🤖', hasBadge: true },
+  { path: '/ai-records', label: 'AI记账记录', icon: '🤖', hasBadge: true },
   { path: '/settings', label: '设置', icon: '⚙️' },
 ]
 

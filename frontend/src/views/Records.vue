@@ -102,7 +102,7 @@ function formatDate(dateStr: string) {
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-800">📝 记账记录</h1>
+      <h1 class="text-2xl font-bold text-gray-800">📝 流水</h1>
       <button
         @click="showRecordModal = true"
         class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2"
