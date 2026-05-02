@@ -78,7 +78,7 @@ function toggleExpand(id: number) {
 async function refresh() {
   loading.value = true
   try {
-    const res = await aiApi.listJobs()
+    const res = await aiApi.listJobs({ limit: 1000 })
     jobs.value = res.data.data.map((j: any) => ({
       ...j,
       records: parseResult(j),
