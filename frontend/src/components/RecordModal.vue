@@ -264,7 +264,7 @@ function handleClose() {
                   @click="handleViewAIRecords"
                   class="flex-1 py-2 px-4 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700"
                 >
-                  查看 AI 记录
+                  查看 AI 记账记录
                 </button>
                 <button
                   @click="handleCloseAIRecordModal"
