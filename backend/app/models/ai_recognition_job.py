@@ -23,7 +23,7 @@ class AIRecognitionJob(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     original_image_url = Column(String(500), nullable=True)   # 图片路径
-    status = Column(SQLEnum(RecognitionStatus), default=RecognitionStatus.PENDING, nullable=False)
+    status = Column(String(20), default="pending")
 
     # AI 识别结果 JSON（识别完成后写入，永久保存）
     # 包含: amount, merchant_name, date, category_guess, confidence, raw_response, records[]

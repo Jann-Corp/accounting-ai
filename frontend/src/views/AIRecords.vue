@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { aiApi } from '@/api'
 import { useAIRecordStore } from '@/stores/aiRecord'
+import { storeToRefs } from 'pinia'
 
 interface RecognizedRecord {
   amount: number
@@ -40,9 +41,7 @@ const sentinel = ref<HTMLElement | null>(null)
 let sentinelObserver: IntersectionObserver | null = null
 
 const aiRecordStore = useAIRecordStore()
-
-// 使用 store 中的 pending records
-const pendingRecords = aiRecordStore.pendingRecords
+const { pendingRecords } = storeToRefs(aiRecordStore)
 
 function parseResult(job: Job): RecognizedRecord[] {
   if (!job.result_json) return []
