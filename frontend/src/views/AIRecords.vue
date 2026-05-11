@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { aiApi } from '@/api'
 import { useAIRecordStore } from '@/stores/aiRecord'
 
@@ -149,19 +149,33 @@ async function rejectRecord(recordId: number) {
   }
 }
 
-onMounted(async () => {
-  await Promise.all([refresh(), refreshPending()])
-  aiRecordStore.markAsViewed()
-
-  // Setup intersection observer for infinite scroll
+// Setup intersection observer for infinite scroll
+function setupSentinelObserver() {
+  if (!sentinel.value || sentinelObserver) return
   sentinelObserver = new IntersectionObserver((entries) => {
     if (entries[0].isIntersecting && activeTab.value === 'jobs') {
       loadMore()
     }
   }, { threshold: 0.1 })
+  sentinelObserver.observe(sentinel.value)
+}
 
-  if (sentinel.value) {
-    sentinelObserver.observe(sentinel.value)
+onMounted(async () => {
+  await Promise.all([refresh(), refreshPending()])
+  aiRecordStore.markAsViewed()
+
+  // Sentinel is inside v-if="activeTab === 'jobs'", so it may not exist yet.
+  // If activeTab is already 'jobs' (or after a tick), try to set up.
+  // Otherwise, a watch on activeTab below will retry once the tab switches.
+  await nextTick()
+  setupSentinelObserver()
+})
+
+// Watch activeTab to set up observer when jobs tab becomes visible
+watch(activeTab, async (tab) => {
+  if (tab === 'jobs') {
+    await nextTick()
+    setupSentinelObserver()
   }
 })
 
