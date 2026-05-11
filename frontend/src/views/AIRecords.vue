@@ -26,6 +26,7 @@ interface Job {
 }
 
 const jobs = ref<Job[]>([])
+const totalJobs = ref(0)  // 总记录数（从 API 获取）
 const loading = ref(false)
 const loadingMore = ref(false)
 const loadingPending = ref(false)
@@ -92,6 +93,7 @@ async function refresh() {
       records: parseResult(j),
     }))
     offset.value = res.data.data.length
+    totalJobs.value = res.data.total
     hasMore.value = offset.value < res.data.total
   } finally {
     loading.value = false
@@ -218,7 +220,7 @@ onUnmounted(() => {
             : 'border-transparent text-gray-500 hover:text-gray-700'
         ]"
       >
-        识别记录 ({{ jobs.length }})
+        识别记录 ({{ totalJobs }})
       </button>
     </div>
 
