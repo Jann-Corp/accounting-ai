@@ -28,6 +28,11 @@ async function handleSave() {
   }
 }
 
+function handleLogout() {
+  authStore.logout()
+  router.push('/login')
+}
+
 onMounted(async () => {
   await walletStore.fetchWallets()
   // Load current default wallet
@@ -73,6 +78,13 @@ onMounted(async () => {
           class="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {{ saving ? '保存中...' : '保存设置' }}
+        </button>
+
+        <button
+          @click="handleLogout"
+          class="w-full py-2.5 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100"
+        >
+          退出登录
         </button>
       </div>
     </div>
