@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 
 const isLogin = ref(true)
 const form = ref({
@@ -46,63 +48,107 @@ function toggleMode() {
   isLogin.value = !isLogin.value
   error.value = ''
 }
+
+function toggleTheme() {
+  themeStore.toggle()
+}
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+  <div
+    class="min-h-screen flex items-center justify-center p-4"
+    style="background: var(--bg-primary);"
+  >
+    <!-- Theme Toggle Floating -->
+    <button
+      @click="toggleTheme"
+      class="absolute top-6 right-6 p-3 rounded-xl transition"
+      style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-md);"
+      :title="themeStore.isDark ? '切换到浅色模式' : '切换到深色模式'"
+    >
+      <span class="text-2xl">{{ themeStore.isDark ? '☀️' : '🌙' }}</span>
+    </button>
+
+    <div
+      class="w-full max-w-md rounded-2xl p-8"
+      style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);"
+    >
+      <!-- Logo -->
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-indigo-600 mb-2">💰 AI记账</h1>
-        <p class="text-gray-500">{{ isLogin ? '登录您的账户' : '创建新账户' }}</p>
+        <div
+          class="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
+          style="background: var(--gradient-gold); box-shadow: var(--shadow-gold);"
+        >
+          <span class="text-3xl">💰</span>
+        </div>
+        <h1 class="text-3xl font-bold text-gradient-gold mb-1">AI记账</h1>
+        <p style="color: var(--text-muted);">
+          {{ isLogin ? '登录您的账户' : '创建新账户' }}
+        </p>
       </div>
 
-      <form @submit.prevent="handleSubmit" class="space-y-4">
-        <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-          {{ error }}
-        </div>
+      <!-- Error -->
+      <div
+        v-if="error"
+        class="mb-4 p-3 rounded-xl text-sm"
+        style="background: rgba(239, 68, 68, 0.1); color: var(--expense-color); border: 1px solid rgba(239, 68, 68, 0.2);"
+      >
+        {{ error }}
+      </div>
 
+      <!-- Form -->
+      <form @submit.prevent="handleSubmit" class="space-y-4">
+        <!-- Username -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+          <label class="block text-sm font-medium mb-1.5" style="color: var(--text-secondary);">用户名</label>
           <input
             v-model="form.username"
             type="text"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            class="input-gold"
             placeholder="请输入用户名"
           />
         </div>
 
+        <!-- Email (register only) -->
         <div v-if="!isLogin">
-          <label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+          <label class="block text-sm font-medium mb-1.5" style="color: var(--text-secondary);">邮箱</label>
           <input
             v-model="form.email"
             type="email"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            class="input-gold"
             placeholder="请输入邮箱"
           />
         </div>
 
+        <!-- Password -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+          <label class="block text-sm font-medium mb-1.5" style="color: var(--text-secondary);">密码</label>
           <input
             v-model="form.password"
             type="password"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            class="input-gold"
             placeholder="请输入密码"
           />
         </div>
 
+        <!-- Submit -->
         <button
           type="submit"
           :disabled="!formValid || authStore.loading"
-          class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          class="btn-gold w-full mt-2"
         >
           {{ authStore.loading ? '处理中...' : (isLogin ? '登录' : '注册') }}
         </button>
       </form>
 
-      <p class="text-center mt-6 text-sm text-gray-600">
+      <!-- Toggle Mode -->
+      <p class="text-center mt-6 text-sm" style="color: var(--text-muted);">
         {{ isLogin ? '还没有账户？' : '已有账户？' }}
-        <button @click="toggleMode" class="text-indigo-600 font-medium hover:underline">
+        <button
+          @click="toggleMode"
+          class="font-semibold ml-1 transition"
+          style="color: var(--accent-gold);"
+        >
           {{ isLogin ? '立即注册' : '去登录' }}
         </button>
       </p>

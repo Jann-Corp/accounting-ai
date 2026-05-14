@@ -219,5 +219,25 @@ export const apiKeyApi = {
     api.delete(`/api-keys/${id}`),
 }
 
+// Exchange Rate API
+export interface ExchangeRate {
+  id: number
+  user_id: number
+  currency: string
+  rate: number
+  updated_at: string
+}
+
+export const exchangeRateApi = {
+  list: () =>
+    api.get<ExchangeRate[]>('/exchange-rates'),
+
+  upsert: (currency: string, rate: number) =>
+    api.post<ExchangeRate>('/exchange-rates', { currency, rate }),
+
+  remove: (currency: string) =>
+    api.delete(`/exchange-rates/${currency}`),
+}
+
 
 export default api

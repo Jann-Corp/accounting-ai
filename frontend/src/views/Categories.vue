@@ -16,7 +16,7 @@ const form = ref<CategoryCreate>({
   icon: '📦',
 })
 
-const icons = ['🍜', '🚗', '🛒', '🎮', '💊', '📚', '🏠', '📱', '💰', '💼', '📈', '🎁', '💵', '🏷️', '📦']
+const icons = ['🍜', '🚗', '🛒', '🎮', '💊', '📚', '🏠', '📱', '💰', '💼', '📈', '🎁', '💵', '🏷️', '📦', '✈️', '🎓', '👶', '🐱', '⚽']
 
 const filteredCategories = computed(() => {
   if (filterType.value) {
@@ -70,99 +70,143 @@ async function handleDelete(id: number) {
 
 <template>
   <div class="space-y-6">
+    <!-- Header -->
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-800">🏷️ 分类管理</h1>
-      <button
-        @click="openAddModal"
-        class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-      >
+      <h1 class="text-2xl font-bold" style="color: var(--text-primary);">🏷️ 分类管理</h1>
+      <button @click="openAddModal" class="btn-gold">
         + 添加分类
       </button>
     </div>
 
-    <!-- Filter -->
-    <div class="flex gap-4 bg-white p-4 rounded-lg">
+    <!-- Filter Tabs -->
+    <div
+      class="flex gap-2 p-1.5 rounded-xl"
+      style="background: var(--bg-card); border: 1px solid var(--border-color);"
+    >
       <button
-        @click="filterType = ''"
-        :class="['px-4 py-2 rounded-lg', !filterType ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-gray-100']"
+        v-for="tab in [
+          { value: '', label: '全部' },
+          { value: CategoryType.EXPENSE, label: '支出' },
+          { value: CategoryType.INCOME, label: '收入' },
+        ]"
+        :key="tab.value"
+        @click="filterType = tab.value as any"
+        class="flex-1 py-2 rounded-lg text-sm font-medium transition"
+        :style="
+          filterType === tab.value
+            ? 'background: var(--accent-gold); color: #1C1917;'
+            : 'color: var(--text-muted);'
+        "
       >
-        全部
-      </button>
-      <button
-        @click="filterType = CategoryType.EXPENSE"
-        :class="['px-4 py-2 rounded-lg', filterType === CategoryType.EXPENSE ? 'bg-red-100 text-red-600' : 'hover:bg-gray-100']"
-      >
-        支出
-      </button>
-      <button
-        @click="filterType = CategoryType.INCOME"
-        :class="['px-4 py-2 rounded-lg', filterType === CategoryType.INCOME ? 'bg-green-100 text-green-600' : 'hover:bg-gray-100']"
-      >
-        收入
+        {{ tab.label }}
       </button>
     </div>
 
-    <!-- Category List -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <!-- Category Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
       <div
         v-for="category in filteredCategories"
         :key="category.id"
-        class="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between"
+        class="rounded-xl p-4 flex items-center justify-between transition"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);"
       >
         <div class="flex items-center gap-3">
-          <span class="text-2xl">{{ category.icon }}</span>
+          <div
+            class="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+            :style="{ background: category.category_type === 'expense' ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)' }"
+          >
+            {{ category.icon }}
+          </div>
           <div>
-            <p class="font-medium">{{ category.name }}</p>
-            <p class="text-xs text-gray-500">
+            <p class="font-medium text-sm" style="color: var(--text-primary);">{{ category.name }}</p>
+            <p class="text-xs" style="color: var(--text-muted);">
               {{ category.category_type === 'expense' ? '支出' : '收入' }}
-              <span v-if="category.is_default" class="text-indigo-500 ml-1">默认</span>
+              <span
+                v-if="category.is_default"
+                class="ml-1 px-1.5 py-0.5 rounded text-xs"
+                style="background: var(--accent-gold-light); color: var(--accent-gold);"
+              >
+                默认
+              </span>
             </p>
           </div>
         </div>
         <div v-if="!category.is_default" class="flex gap-1">
-          <button @click="openEditModal(category)" class="p-2 hover:bg-gray-100 rounded-lg">✏️</button>
-          <button @click="handleDelete(category.id)" class="p-2 hover:bg-red-50 rounded-lg">🗑️</button>
+          <button
+            @click="openEditModal(category)"
+            class="p-1.5 rounded-lg transition"
+            style="color: var(--text-muted);"
+          >
+            ✏️
+          </button>
+          <button
+            @click="handleDelete(category.id)"
+            class="p-1.5 rounded-lg transition"
+            style="color: var(--text-muted);"
+          >
+            🗑️
+          </button>
         </div>
       </div>
     </div>
 
-    <div v-if="filteredCategories.length === 0" class="text-center py-12 text-gray-500 bg-white rounded-2xl">
+    <div
+      v-if="filteredCategories.length === 0"
+      class="text-center py-12 rounded-2xl"
+      style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted);"
+    >
       还没有分类
     </div>
 
     <!-- Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">{{ editingCategory ? '编辑分类' : '添加分类' }}</h2>
+    <div
+      v-if="showModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay"
+      @click.self="showModal = false"
+    >
+      <div
+        class="rounded-2xl p-6 w-full max-w-md"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);"
+      >
+        <h2 class="text-xl font-bold mb-6" style="color: var(--text-primary);">
+          {{ editingCategory ? '✏️ 编辑分类' : '➕ 添加分类' }}
+        </h2>
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">分类名称</label>
-            <input v-model="form.name" type="text" class="w-full border rounded-lg px-3 py-2" required />
+            <label class="block text-sm font-medium mb-1.5" style="color: var(--text-secondary);">分类名称</label>
+            <input v-model="form.name" type="text" class="input-gold" placeholder="例如：餐饮" required />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">类型</label>
-            <select v-model="form.category_type" class="w-full border rounded-lg px-3 py-2">
+            <label class="block text-sm font-medium mb-1.5" style="color: var(--text-secondary);">类型</label>
+            <select v-model="form.category_type" class="input-gold">
               <option value="expense">支出</option>
               <option value="income">收入</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">图标</label>
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">图标</label>
             <div class="flex flex-wrap gap-2">
               <button
                 v-for="icon in icons"
                 :key="icon"
                 type="button"
                 @click="form.icon = icon"
-                :class="['text-2xl p-2 rounded-lg border-2', form.icon === icon ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300']"
+                class="text-2xl p-2 rounded-lg border transition"
+                :style="
+                  form.icon === icon
+                    ? 'border-color: var(--accent-gold); background: var(--accent-gold-light);'
+                    : 'border-color: var(--border-color);'
+                "
               >
                 {{ icon }}
               </button>
             </div>
           </div>
           <div class="flex gap-3 pt-2">
-            <button type="button" @click="showModal = false" class="flex-1 py-2 border rounded-lg">取消</button>
-            <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-lg">保存</button>
+            <button type="button" @click="showModal = false" class="flex-1 py-2.5 rounded-xl border" style="border-color: var(--border-color); color: var(--text-secondary);">
+              取消
+            </button>
+            <button type="submit" class="flex-1 btn-gold">保存</button>
           </div>
         </form>
       </div>
