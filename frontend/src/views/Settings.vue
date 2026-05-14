@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useWalletStore } from '@/stores/wallet'
 import { useThemeStore } from '@/stores/theme'
 import { exchangeRateApi, type ExchangeRate } from '@/api'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const walletStore = useWalletStore()
 const themeStore = useThemeStore()
@@ -86,6 +88,11 @@ async function removeRate(currency: string) {
   } catch (e: any) {
     rateError.value = e.message || '删除失败'
   }
+}
+
+function handleLogout() {
+  authStore.logout()
+  router.push('/login')
 }
 
 onMounted(async () => {
@@ -288,6 +295,24 @@ onMounted(async () => {
           <span class="font-medium" style="color: var(--text-primary);">{{ item.value }}</span>
         </div>
       </div>
+    </div>
+
+    <!-- Logout -->
+    <div
+      class="rounded-2xl p-6"
+      style="background: var(--bg-card); border: 1px solid rgba(239,68,68,0.2); box-shadow: var(--shadow-md);"
+    >
+      <h2 class="text-lg font-semibold mb-1" style="color: var(--expense-color);">⚠️ 危险区域</h2>
+      <p class="text-sm mb-4" style="color: var(--text-muted);">
+        退出当前账户
+      </p>
+      <button
+        @click="handleLogout"
+        class="w-full py-2.5 rounded-xl font-medium transition"
+        style="background: rgba(239,68,68,0.1); color: var(--expense-color); border: 1px solid rgba(239,68,68,0.2);"
+      >
+        退出登录
+      </button>
     </div>
   </div>
 </template>

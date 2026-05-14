@@ -77,10 +77,10 @@ body {
 }
 
 /* ============================================
-   全局过渡 & 基础样式
+   基础样式
    ============================================ */
 *, *::before, *::after {
-  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 html {
