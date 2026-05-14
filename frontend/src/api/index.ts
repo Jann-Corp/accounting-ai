@@ -162,7 +162,7 @@ export const aiApi = {
   },
 
   listJobs: (params?: { limit?: number; offset?: number }) => {
-    return api.get<{ data: any[]; total: number; limit: number; offset: number }>('/ai/jobs', { params })
+    return api.get<any[]>('/ai/jobs', { params })
   },
 
   getJobDetail: (jobId: number) => {
