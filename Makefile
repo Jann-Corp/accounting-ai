@@ -1,97 +1,90 @@
-.PHONY: help up down restart ps logs logs-backend logs-frontend logs-db \
-        build build-backend build-frontend rebuild rebuild-backend rebuild-frontend \
-        deploy deploy-backend deploy-frontend \
-        clean status
+.PHONY: help up down build logs logs-backend logs-frontend logs-db test test-e2e migrate shell db-reset status
 
-# ==================== Configuration ====================
-DOCKER_COMPOSE := docker compose -p accounting-ai
-COMPOSE_FILE := docker-compose.yml
+PROJECT := accounting-ai
+DC := sg docker -c "docker compose -p $(PROJECT)"
 
-# Default target
-.DEFAULT_GOAL := help
+# Colors
+GREEN  := \033[0;32m
+YELLOW := \033[0;33m
+NC     := \033[0m
 
-# ==================== Help ====================
-help: ## Show this help message
-	@echo "📊 Accounting AI - Makefile Commands"
-	@echo "======================================"
-	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
-	@echo ""
-	@echo "💡 Quick Start: make up"
+help: ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-12s$(NC) %s\n", $$1, $$2}'
 
-# ==================== Docker ====================
+# ── Docker Compose ───────────────────────────────────────────────────────────
+
 up: ## Start all services
-	@echo "🚀 Starting all services..."
-	$(DOCKER_COMPOSE) up -d
-	@echo "✅ Services started!"
+	$(DC) up -d --build
 
-down: ## Stop and remove all containers
-	@echo "🛑 Stopping all services..."
-	$(DOCKER_COMPOSE) down
-	@echo "✅ Services stopped!"
+down: ## Stop all services (keep volumes)
+	$(DC) down
 
-restart: ## Restart all services
-	@echo "🔄 Restarting all services..."
-	$(DOCKER_COMPOSE) restart
-	@echo "✅ Services restarted!"
+build: ## Rebuild all services
+	$(DC) up -d --build
 
-ps: status ## Show all project containers (alias)
-status: ## Show all project containers status
-	@echo "📦 Container Status for project 'accounting-ai':"
-	$(DOCKER_COMPOSE) ps -a
+status: ## Show container status
+	$(DC) ps
 
-clean: ## Remove containers and volumes
-	@echo "🧹 Cleaning up..."
-	$(DOCKER_COMPOSE) down -v
+# ── Logs ─────────────────────────────────────────────────────────────────────
 
-# ==================== Build ====================
-build: build-backend build-frontend ## Build all images (with cache)
+logs: ## Tail all logs
+	$(DC) logs -f
 
-build-backend: ## Build backend image only
-	@echo "🔨 Building backend image..."
-	$(DOCKER_COMPOSE) build backend
+logs-backend: ## Tail backend logs
+	$(DC) logs -f backend
 
-build-frontend: ## Build frontend image only
-	@echo "🔨 Building frontend image..."
-	$(DOCKER_COMPOSE) build frontend
+logs-frontend: ## Tail frontend logs
+	$(DC) logs -f frontend
 
-rebuild: rebuild-backend rebuild-frontend ## Rebuild all images (no cache)
+logs-db: ## Tail database logs
+	$(DC) logs -f db
 
-rebuild-backend: ## Rebuild backend image only (no cache)
-	@echo "🔄 Rebuilding backend image (no cache)..."
-	$(DOCKER_COMPOSE) build --no-cache backend
+# ── Database ─────────────────────────────────────────────────────────────────
 
-rebuild-frontend: ## Rebuild frontend image only (no cache)
-	@echo "🔄 Rebuilding frontend image (no cache)..."
-	$(DOCKER_COMPOSE) build --no-cache frontend
+migrate: ## Run alembic migrations
+	$(DC) exec backend alembic upgrade head
 
-# ==================== Deploy (Build + Replace) ====================
-deploy: deploy-backend deploy-frontend ## Build and deploy all services
+migrate-redo: ## Rollback last migration and re-run
+	$(DC) exec backend alembic downgrade -1
+	$(DC) exec backend alembic upgrade head
 
-deploy-backend: ## Build and deploy backend only (replace container)
-	@echo "🚀 Building and deploying backend..."
-	$(DOCKER_COMPOSE) up -d --build --force-recreate --no-deps backend
-	@echo "✅ Backend deployed!"
+db-reset: ## Stop services, remove volumes, start fresh
+	$(DC) down -v
+	$(DC) up -d
+	$(DC) exec backend alembic upgrade head
 
-deploy-frontend: ## Build and deploy frontend only (replace container)
-	@echo "🚀 Building and deploying frontend..."
-	$(DOCKER_COMPOSE) up -d --build --force-recreate --no-deps frontend
-	@echo "✅ Frontend deployed!"
+db-shell: ## Open psql shell
+	$(DC) exec db psql -U postgres -d accounting
 
-# ==================== Logs ====================
-logs: logs-backend ## Show backend logs (default)
+# ── Tests ─────────────────────────────────────────────────────────────────────
 
-logs-backend: ## Show backend logs (follow)
-	@echo "📋 Backend logs:"
-	$(DOCKER_COMPOSE) logs --tail=200 -f backend
+test: ## Run backend pytest
+	$(DC) exec backend pytest -v
 
-logs-frontend: ## Show frontend logs (follow)
-	@echo "🎨 Frontend logs:"
-	$(DOCKER_COMPOSE) logs --tail=200 -f frontend
+test-watch: ## Run backend pytest with watch mode
+	$(DC) exec backend pytest -v --watch
 
-logs-db: ## Show database logs (follow)
-	@echo "🗄️  Database logs:"
-	$(DOCKER_COMPOSE) logs --tail=200 -f db
+test-e2e: ## Run frontend E2E tests (Playwright)
+	cd frontend && npm run test:e2e
 
-logs-all: ## Show all logs (follow)
-	@echo "📋 All logs:"
-	$(DOCKER_COMPOSE) logs --tail=200 -f
+test-e2e-ui: ## Open Playwright UI mode
+	cd frontend && npx playwright test --ui
+
+# ── Shell ─────────────────────────────────────────────────────────────────────
+
+shell-backend: ## Get shell in backend container
+	$(DC) exec backend /bin/sh
+
+shell-frontend: ## Get shell in frontend container
+	$(DC) exec frontend /bin/sh
+
+# ── Cleanup ───────────────────────────────────────────────────────────────────
+
+clean: ## Remove stopped containers and dangling images
+	$(DC) down --remove-orphans
+	docker image prune -f
+
+prune: ## Remove all containers, volumes, and images for this project
+	$(DC) down -v --remove-orphans
+	docker volume prune -f

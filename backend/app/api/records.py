@@ -300,7 +300,19 @@ def reject_record(
     if record.status != RecordStatus.PENDING:
         raise HTTPException(status_code=400, detail="只能拒绝待确认状态的记录")
 
-    record.status = RecordStatus.REJECTED
+    # Restore wallet balance if this was an AI recognized record
+    if record.is_ai_recognized and record.wallet_id:
+        from app.models.wallet import Wallet
+        wallet = db.query(Wallet).filter(Wallet.id == record.wallet_id).first()
+        if wallet:
+            if record.record_type == RecordType.EXPENSE:
+                wallet.balance += record.amount
+            else:
+                wallet.balance -= record.amount
+            db.add(wallet)
+    
+    # Delete the rejected record
+    db.delete(record)
     db.commit()
 
-    return {"message": "已拒绝该记录"}
+    return {"message": "已丢弃该记录"}
