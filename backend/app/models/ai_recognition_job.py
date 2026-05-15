@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func, Text, Enum as SQLEnum
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.hybrid import hybrid_property, Comparator
 import enum
 from app.database import Base
 
@@ -23,7 +24,7 @@ class AIRecognitionJob(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     original_image_url = Column(String(500), nullable=True)   # 图片路径
-    status = Column(String(20), default="pending")
+    _status = Column("status", String(20), default="pending")
 
     # AI 识别结果 JSON（识别完成后写入，永久保存）
     # 包含: amount, merchant_name, date, category_guess, confidence, raw_response, records[]
@@ -34,6 +35,32 @@ class AIRecognitionJob(Base):
 
     created_at = Column(DateTime, server_default=func.now())
     completed_at = Column(DateTime, nullable=True)   # 识别完成时间
+
+    # === Case-insensitive hybrid property for backward compat ===
+
+    @hybrid_property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        if isinstance(value, enum.Enum):
+            value = value.value
+        self._status = str(value).upper()
+
+    @status.comparator
+    def status(cls):
+        class UpperComparator(Comparator):
+            def __eq__(self, other):
+                if isinstance(other, enum.Enum):
+                    other = other.value
+                return func.upper(cls._status) == str(other).upper()
+
+            def __ne__(self, other):
+                if isinstance(other, enum.Enum):
+                    other = other.value
+                return func.upper(cls._status) != str(other).upper()
+        return UpperComparator()
 
     # Relationships
     user = relationship("User", back_populates="ai_recognition_jobs")

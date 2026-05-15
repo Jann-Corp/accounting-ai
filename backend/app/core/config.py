@@ -1,9 +1,10 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 from typing import Optional
 
 
 class Settings(BaseSettings):
-    # App
+    model_config = ConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
     APP_NAME: str = "AI Accounting"
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR
@@ -61,10 +62,5 @@ class Settings(BaseSettings):
         "4. 只返回 JSON 数组，不要有其他文字\n"
         "5. amount 必须是正数，record_type 必须为 expense 或 income（字符串）"
     )
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-
 
 settings = Settings()
