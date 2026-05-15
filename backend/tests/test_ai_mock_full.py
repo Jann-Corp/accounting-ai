@@ -97,7 +97,7 @@ def test_ai_recognized_record_appears_in_stats(client, auth_headers, db, test_us
 def test_record_type_string_vs_enum_comparison():
     """Test demonstrating the fix: hybrid_property makes enum and string comparison case-insensitive.
 
-    With the hybrid_property fix, both RecordType.EXPENSE and the string 'expense'
+    With the hybrid_property fix, both RecordType.EXPENSE and the string 'EXPENSE'
     are treated equivalently in comparisons.
     """
     from app.models.record import RecordType
@@ -105,11 +105,11 @@ def test_record_type_string_vs_enum_comparison():
     # Enum equals enum
     assert RecordType.EXPENSE == RecordType.EXPENSE
 
-    # With hybrid_property fix: enum equals lowercase string (case-insensitive)
-    assert RecordType.EXPENSE == "expense"
+    # With hybrid_property fix: enum equals uppercase string (case-insensitive)
+    assert RecordType.EXPENSE == "EXPENSE"
 
     # Mixed list: enum and string both match RecordType.EXPENSE
-    sample_types = [RecordType.EXPENSE, RecordType.INCOME, "expense"]
+    sample_types = [RecordType.EXPENSE, RecordType.INCOME, "EXPENSE"]
     expense_records = [t for t in sample_types if t == RecordType.EXPENSE]
     assert len(expense_records) == 2  # Both enum and string match
 

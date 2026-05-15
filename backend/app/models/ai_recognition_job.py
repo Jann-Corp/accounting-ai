@@ -6,10 +6,10 @@ from app.database import Base
 
 
 class RecognitionStatus(str, enum.Enum):
-    PENDING = "pending"      # 等待处理
-    PROCESSING = "processing"  # AI 识别中
-    DONE = "done"           # 完成，已生成记录
-    FAILED = "failed"       # 识别失败
+    PENDING = "PENDING"      # 等待处理
+    PROCESSING = "PROCESSING"  # AI 识别中
+    DONE = "DONE"           # 完成，已生成记录
+    FAILED = "FAILED"       # 识别失败
 
 
 class AIRecognitionJob(Base):
@@ -46,16 +46,16 @@ class AIRecognitionJob(Base):
     def status(self, value):
         if isinstance(value, enum.Enum):
             value = value.value
-        self._status = str(value).lower()
+        self._status = str(value).upper()
 
     @status.comparator
     def status(cls):
-        class LowerComparator(Comparator):
+        class UpperComparator(Comparator):
             def __eq__(self, other):
                 if isinstance(other, enum.Enum):
                     other = other.value
-                return func.lower(cls._status) == str(other).lower()
-        return LowerComparator()
+                return func.upper(cls._status) == str(other).upper()
+        return UpperComparator()
 
     # Relationships
     user = relationship("User", back_populates="ai_recognition_jobs")

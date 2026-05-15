@@ -39,7 +39,7 @@ class AIRecognitionJobResponse(AIRecognitionJobBase):
     @classmethod
     def normalize_status(cls, v):
         if isinstance(v, str):
-            return v.lower()
+            return v.upper()
         return v
 
 

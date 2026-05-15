@@ -6,14 +6,14 @@ from app.database import Base
 
 
 class RecordType(str, enum.Enum):
-    EXPENSE = "expense"
-    INCOME = "income"
+    EXPENSE = "EXPENSE"
+    INCOME = "INCOME"
 
 
 class RecordStatus(str, enum.Enum):
-    CONFIRMED = "confirmed"
-    PENDING = "pending"
-    REJECTED = "rejected"
+    CONFIRMED = "CONFIRMED"
+    PENDING = "PENDING"
+    REJECTED = "REJECTED"
 
 
 class Record(Base):
@@ -46,16 +46,16 @@ class Record(Base):
     def record_type(self, value):
         if isinstance(value, enum.Enum):
             value = value.value
-        self._record_type = str(value).lower()
+        self._record_type = str(value).upper()
 
     @record_type.comparator
     def record_type(cls):
-        class LowerComparator(Comparator):
+        class UpperComparator(Comparator):
             def __eq__(self, other):
                 if isinstance(other, enum.Enum):
                     other = other.value
-                return func.lower(cls._record_type) == str(other).lower()
-        return LowerComparator()
+                return func.upper(cls._record_type) == str(other).upper()
+        return UpperComparator()
 
     @hybrid_property
     def status(self):
@@ -65,16 +65,16 @@ class Record(Base):
     def status(self, value):
         if isinstance(value, enum.Enum):
             value = value.value
-        self._status = str(value).lower()
+        self._status = str(value).upper()
 
     @status.comparator
     def status(cls):
-        class LowerComparator(Comparator):
+        class UpperComparator(Comparator):
             def __eq__(self, other):
                 if isinstance(other, enum.Enum):
                     other = other.value
-                return func.lower(cls._status) == str(other).lower()
-        return LowerComparator()
+                return func.upper(cls._status) == str(other).upper()
+        return UpperComparator()
 
     # Relationships
     user = relationship("User", back_populates="records")
