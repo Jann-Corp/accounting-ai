@@ -5,14 +5,14 @@ from app.database import Base
 
 
 class RecordType(str, enum.Enum):
-    EXPENSE = "expense"
-    INCOME = "income"
+    EXPENSE = "EXPENSE"
+    INCOME = "INCOME"
 
 
 class RecordStatus(str, enum.Enum):
-    CONFIRMED = "confirmed"
-    PENDING = "pending"
-    REJECTED = "rejected"
+    CONFIRMED = "CONFIRMED"
+    PENDING = "PENDING"
+    REJECTED = "REJECTED"
 
 
 class Record(Base):
