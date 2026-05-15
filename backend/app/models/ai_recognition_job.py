@@ -51,16 +51,19 @@ class AIRecognitionJob(Base):
     @status.comparator
     def status(cls):
         class UpperComparator(Comparator):
+            def __init__(self, expression):
+                super().__init__(expression)
+
             def __eq__(self, other):
                 if isinstance(other, enum.Enum):
                     other = other.value
-                return func.upper(cls._status) == str(other).upper()
+                return func.upper(self.expression) == str(other).upper()
 
             def __ne__(self, other):
                 if isinstance(other, enum.Enum):
                     other = other.value
-                return func.upper(cls._status) != str(other).upper()
-        return UpperComparator()
+                return func.upper(self.expression) != str(other).upper()
+        return UpperComparator(cls._status)
 
     # Relationships
     user = relationship("User", back_populates="ai_recognition_jobs")
