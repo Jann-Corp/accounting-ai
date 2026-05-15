@@ -55,6 +55,11 @@ class AIRecognitionJob(Base):
                 if isinstance(other, enum.Enum):
                     other = other.value
                 return func.upper(cls._status) == str(other).upper()
+
+            def __ne__(self, other):
+                if isinstance(other, enum.Enum):
+                    other = other.value
+                return func.upper(cls._status) != str(other).upper()
         return UpperComparator()
 
     # Relationships

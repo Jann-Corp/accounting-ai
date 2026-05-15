@@ -32,7 +32,7 @@ class Record(Base):
     is_ai_recognized = Column(Integer, default=0, nullable=False)  # 0=manual, 1=AI recognized
     job_id = Column(Integer, ForeignKey("ai_recognition_jobs.id", ondelete="SET NULL"), nullable=True)  # AI 识别任务 ID
     is_suspected_duplicate = Column(Integer, default=0, nullable=False)  # 0=正常, 1=疑似重复
-    _status = Column("status", String(20), default="confirmed")
+    _status = Column("status", String(20), default="CONFIRMED")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -55,6 +55,11 @@ class Record(Base):
                 if isinstance(other, enum.Enum):
                     other = other.value
                 return func.upper(cls._record_type) == str(other).upper()
+
+            def __ne__(self, other):
+                if isinstance(other, enum.Enum):
+                    other = other.value
+                return func.upper(cls._record_type) != str(other).upper()
         return UpperComparator()
 
     @hybrid_property
@@ -74,6 +79,11 @@ class Record(Base):
                 if isinstance(other, enum.Enum):
                     other = other.value
                 return func.upper(cls._status) == str(other).upper()
+
+            def __ne__(self, other):
+                if isinstance(other, enum.Enum):
+                    other = other.value
+                return func.upper(cls._status) != str(other).upper()
         return UpperComparator()
 
     # Relationships
