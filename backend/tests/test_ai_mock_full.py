@@ -95,31 +95,23 @@ def test_ai_recognized_record_appears_in_stats(client, auth_headers, db, test_us
 
 
 def test_record_type_string_vs_enum_comparison():
-    """Test demonstrating the bug: string comparison fails with enum in SQLAlchemy queries.
-    
-    This test shows why the bug occurred - if record_type is stored as string,
-    the SQLAlchemy query comparison against enum fails.
+    """Test demonstrating the fix: hybrid_property makes enum and string comparison case-insensitive.
+
+    With the hybrid_property fix, both RecordType.EXPENSE and the string 'expense'
+    are treated equivalently in comparisons.
     """
     from app.models.record import RecordType
-    
-    # Correct: comparing enum with enum works
+
+    # Enum equals enum
     assert RecordType.EXPENSE == RecordType.EXPENSE
-    
-    # Bug: comparing string with enum fails (this is what was happening)
-    # Uncomment to see the failure:
-    # assert "expense" == RecordType.EXPENSE  # This would fail!
-    
-    # Simulate what the stats query does
-    sample_types = [RecordType.EXPENSE, RecordType.INCOME, "expense"]  # Mixed
-    
-    # Filter using enum (correct way)
+
+    # With hybrid_property fix: enum equals lowercase string (case-insensitive)
+    assert RecordType.EXPENSE == "expense"
+
+    # Mixed list: enum and string both match RecordType.EXPENSE
+    sample_types = [RecordType.EXPENSE, RecordType.INCOME, "expense"]
     expense_records = [t for t in sample_types if t == RecordType.EXPENSE]
-    assert len(expense_records) == 1  # Only the enum value matches
-    
-    # Filter using string (buggy way - what was happening before)
-    buggy_expense_records = [t for t in sample_types if t == "expense"]
-    assert len(buggy_expense_records) == 1  # Only the string value matches
-    assert buggy_expense_records[0] != RecordType.EXPENSE  # But they're not the same!
+    assert len(expense_records) == 2  # Both enum and string match
 
 
 def test_ai_recognition_with_mock_service(client, auth_headers, db, test_user, test_wallet):
