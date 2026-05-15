@@ -84,12 +84,12 @@ class Record(Base):
             def __eq__(self, other):
                 if isinstance(other, enum.Enum):
                     other = other.value
-                return func.upper(self.expression) == str(other).upper()
+                return func.upper(self.expression.cast(String)) == str(other).upper()
 
             def __ne__(self, other):
                 if isinstance(other, enum.Enum):
                     other = other.value
-                return func.upper(self.expression) != str(other).upper()
+                return func.upper(self.expression.cast(String)) != str(other).upper()
         return UpperComparator(cls._status)
 
     # Relationships
