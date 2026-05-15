@@ -16,7 +16,7 @@ class RecordBase(BaseModel):
     @classmethod
     def normalize_record_type(cls, v):
         if isinstance(v, str):
-            return v.upper()
+            return v.lower()
         return v
 
 
@@ -37,7 +37,7 @@ class RecordUpdate(BaseModel):
     @classmethod
     def normalize_record_type(cls, v):
         if isinstance(v, str):
-            return v.upper()
+            return v.lower()
         return v
 
 
@@ -76,7 +76,7 @@ class RecordFilter(BaseModel):
     @classmethod
     def normalize_field(cls, v):
         if isinstance(v, str):
-            return v.upper()
+            return v.lower()
         return v
 
 
