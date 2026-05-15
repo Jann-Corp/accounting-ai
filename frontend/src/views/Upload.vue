@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth'
 import { aiApi } from '@/api'
 import { RecordType } from '@/types'
 import type { AIRecognizeResponse, AIRecognizeRecord } from '@/types'
+import { onMounted, onUnmounted } from 'vue'
 
 const router = useRouter()
 const recordStore = useRecordStore()
@@ -61,9 +62,7 @@ function todayDateStr() {
 function parseAiDate(dateStr: string | null | undefined): string {
   if (!dateStr) return toLocalDatetimeStr(new Date())
   const trimmed = dateStr.trim()
-  // Has date part
   if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) return trimmed.slice(0, 16)
-  // Time only — prepend today
   if (/^\d{1,2}:\d{2}/.test(trimmed)) return `${todayDateStr()} ${trimmed.trim()}`
   return toLocalDatetimeStr(new Date())
 }
@@ -73,18 +72,15 @@ async function handleFileSelect(e: Event) {
   const file = input.files?.[0]
   if (!file) return
 
-  // Preview
   if (preview.value) URL.revokeObjectURL(preview.value)
   preview.value = URL.createObjectURL(file)
 
-  // Reset previous results
   stopPolling()
   aiResults.value = []
   forms.value = []
   error.value = ''
   taskId.value = null
 
-  // Upload and start async recognition
   uploading.value = true
   recognitionProgress.value = '正在上传图片...'
   try {
@@ -92,7 +88,6 @@ async function handleFileSelect(e: Event) {
     const data = res.data
     taskId.value = data.task_id
 
-    // Start polling
     recognitionProgress.value = 'AI 正在识别中（首次识别可能需要 20-60 秒）...'
     pollInterval.value = setInterval(async () => {
       try {
@@ -100,7 +95,6 @@ async function handleFileSelect(e: Event) {
         const pollData = pollRes.data
 
         if (pollData.status === 'pending') {
-          // Still working — just update progress text
           recognitionProgress.value = 'AI 正在识别中，请稍候...'
         } else if (pollData.status === 'done') {
           stopPolling()
@@ -108,7 +102,6 @@ async function handleFileSelect(e: Event) {
           const records: AIRecognizeRecord[] = result.records || []
 
           if (records.length === 0) {
-            // Fallback to top-level fields
             aiResults.value = [{
               amount: result.amount || 0,
               merchant_name: result.merchant_name || '',
@@ -122,7 +115,6 @@ async function handleFileSelect(e: Event) {
             aiResults.value = records
           }
 
-          // Initialize forms
           forms.value = aiResults.value.map((r: AIRecognizeRecord) => {
             const rt = (r.record_type === 'income' ? 'income' : 'expense') as 'expense' | 'income'
             return {
@@ -138,7 +130,6 @@ async function handleFileSelect(e: Event) {
           recognitionProgress.value = ''
           uploading.value = false
 
-          // Auto-save: if ALL records have confidence >= 0.85, save immediately
           if (aiResults.value.length > 0 && aiResults.value.every(r => (r.confidence || 0) >= 0.85)) {
             autoSaving.value = true
             await handleSaveAll()
@@ -148,7 +139,6 @@ async function handleFileSelect(e: Event) {
           stopPolling()
           error.value = '识别失败，请重试'
           uploading.value = false
-          // Allow re-upload
           if (fileInput.value) fileInput.value.value = ''
         }
       } catch {
@@ -159,7 +149,6 @@ async function handleFileSelect(e: Event) {
     stopPolling()
     error.value = e.response?.data?.detail || '上传失败，请重试'
     uploading.value = false
-    // Allow re-upload
     if (fileInput.value) fileInput.value.value = ''
     preview.value = null
   }
@@ -198,16 +187,12 @@ function triggerFileInput() {
   fileInput.value?.click()
 }
 
-// Load wallets and categories on mount
-import { onMounted } from 'vue'
 onMounted(async () => {
   await Promise.all([
     walletStore.fetchWallets(),
     categoryStore.fetchCategories(),
   ])
-  // Use user's default wallet if set, otherwise use first wallet
   if (walletStore.wallets.length > 0) {
-    const authStore = useAuthStore()
     const userDefaultWalletId = authStore.user?.default_wallet_id
     if (userDefaultWalletId && walletStore.wallets.some(w => w.id === userDefaultWalletId)) {
       selectedWalletId.value = userDefaultWalletId
@@ -217,19 +202,21 @@ onMounted(async () => {
   }
 })
 
-// Cleanup polling on unmount
-import { onUnmounted } from 'vue'
 onUnmounted(() => { stopPolling() })
 </script>
 
 <template>
   <div class="max-w-2xl mx-auto space-y-6">
-    <h1 class="text-2xl font-bold text-gray-800">🤖 AI 识别记账</h1>
+    <h1 class="text-2xl font-bold" style="color: var(--text-primary);">🤖 AI 识别记账</h1>
 
-    <!-- Wallet selector (global for all records) -->
-    <div v-if="walletStore.wallets.length > 0" class="bg-white rounded-2xl shadow-sm p-4">
-      <label class="block text-sm font-medium text-gray-700 mb-2">默认账户（可单独修改）</label>
-      <select v-model="selectedWalletId" class="w-full border rounded-lg px-3 py-2">
+    <!-- Wallet selector -->
+    <div
+      v-if="walletStore.wallets.length > 0"
+      class="rounded-xl p-4"
+      style="background: var(--bg-card); border: 1px solid var(--border-color);"
+    >
+      <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">默认账户（可单独修改）</label>
+      <select v-model="selectedWalletId" class="input-gold">
         <option v-for="w in walletStore.wallets" :key="w.id" :value="w.id">{{ w.name }}</option>
       </select>
     </div>
@@ -237,7 +224,9 @@ onUnmounted(() => { stopPolling() })
     <!-- Upload Area -->
     <div
       @click="triggerFileInput"
-      class="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center cursor-pointer hover:border-indigo-400 transition"
+      class="rounded-2xl p-12 text-center cursor-pointer transition"
+      style="border: 2px dashed var(--border-strong);"
+      :style="{ borderColor: 'var(--accent-gold)' }"
     >
       <input
         ref="fileInput"
@@ -249,30 +238,34 @@ onUnmounted(() => { stopPolling() })
       <div v-if="!preview" class="space-y-4">
         <div class="text-6xl">📷</div>
         <div>
-          <p class="text-lg font-medium text-gray-700">点击上传小票图片</p>
-          <p class="text-sm text-gray-500 mt-1">支持 JPG、PNG、WebP 格式</p>
+          <p class="text-lg font-medium" style="color: var(--text-primary);">点击上传小票图片</p>
+          <p class="text-sm mt-1" style="color: var(--text-muted);">支持 JPG、PNG、WebP 格式</p>
         </div>
       </div>
-      <img v-else :src="preview" class="max-h-72 mx-auto rounded-lg" alt="Preview" />
+      <img v-else :src="preview" class="max-h-72 mx-auto rounded-xl" alt="Preview" />
     </div>
 
     <!-- Loading / Polling -->
     <div v-if="uploading" class="text-center py-8">
-      <div class="text-4xl mb-4 animate-spin">⏳</div>
-      <p class="text-gray-500">{{ recognitionProgress || 'AI 正在识别中...' }}</p>
+      <div class="text-4xl mb-4 animate-pulse">⏳</div>
+      <p style="color: var(--text-muted);">{{ recognitionProgress || 'AI 正在识别中...' }}</p>
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="bg-red-50 text-red-600 p-4 rounded-lg">
+    <div
+      v-if="error"
+      class="p-4 rounded-xl text-sm"
+      style="background: rgba(239,68,68,0.1); color: var(--expense-color); border: 1px solid rgba(239,68,68,0.2);"
+    >
       {{ error }}
     </div>
 
-    <!-- AI Results - Multiple Records -->
+    <!-- AI Results -->
     <div v-if="aiResults.length > 0 && !uploading" class="space-y-4">
-      <div class="flex items-center gap-2 text-green-600">
+      <div class="flex items-center gap-2" style="color: var(--income-color);">
         <span class="text-xl">✅</span>
         <span class="font-medium">识别成功</span>
-        <span class="text-sm text-gray-500 ml-2">
+        <span class="text-sm" style="color: var(--text-muted); margin-left: 8px;">
           共 {{ aiResults.length }} 条记录
         </span>
       </div>
@@ -281,27 +274,31 @@ onUnmounted(() => { stopPolling() })
       <div
         v-for="(result, index) in aiResults"
         :key="index"
-        class="bg-white rounded-2xl shadow-sm p-6 space-y-4"
+        class="rounded-2xl p-6 space-y-4"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-md);"
       >
         <div class="flex items-center justify-between">
-          <h3 class="font-semibold text-gray-700">记录 {{ index + 1 }}</h3>
+          <h3 class="font-semibold" style="color: var(--text-primary);">记录 {{ index + 1 }}</h3>
           <div class="flex items-center gap-2">
-            <!-- Record type toggle -->
             <select
               v-model="forms[index].record_type"
-              :class="['text-xs px-2 py-0.5 rounded-full border',
+              class="text-xs px-2 py-0.5 rounded-full border"
+              :style="
                 forms[index].record_type === 'income'
-                  ? 'bg-green-100 text-green-700 border-green-300'
-                  : 'bg-red-100 text-red-600 border-red-300'
-              ]"
+                  ? 'background: rgba(34,197,94,0.1); color: var(--income-color); border-color: rgba(34,197,94,0.3);'
+                  : 'background: rgba(239,68,68,0.1); color: var(--expense-color); border-color: rgba(239,68,68,0.3);'
+              "
             >
               <option value="expense">💸 支出</option>
               <option value="income">💰 退款/收入</option>
             </select>
             <span
-              :class="['text-xs px-2 py-0.5 rounded-full',
-                (result.confidence || 0) >= 0.85 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-              ]"
+              class="text-xs px-2 py-0.5 rounded-full"
+              :style="
+                (result.confidence || 0) >= 0.85
+                  ? 'background: rgba(34,197,94,0.1); color: var(--income-color);'
+                  : 'background: var(--accent-gold-light); color: var(--accent-gold);'
+              "
             >
               置信度: {{ ((result.confidence || 0) * 100).toFixed(0) }}%
             </span>
@@ -310,50 +307,52 @@ onUnmounted(() => { stopPolling() })
 
         <!-- AI recognized summary -->
         <div class="grid grid-cols-2 gap-3 text-sm">
-          <div :class="['p-3 rounded-lg', forms[index].record_type === 'income' ? 'bg-green-50' : 'bg-gray-50']">
-            <p class="text-gray-500 text-xs">
+          <div
+            class="p-3 rounded-lg"
+            :style="forms[index].record_type === 'income' ? 'background: rgba(34,197,94,0.08);' : 'background: var(--bg-hover);'"
+          >
+            <p class="text-xs" style="color: var(--text-muted);">
               {{ forms[index].record_type === 'income' ? '退款/收入' : '消费金额' }}
             </p>
-            <p :class="['font-bold text-lg', forms[index].record_type === 'income' ? 'text-green-600' : 'text-red-600']">
+            <p
+              class="font-bold text-lg"
+              :style="{ color: forms[index].record_type === 'income' ? 'var(--income-color)' : 'var(--expense-color)' }"
+            >
               ¥{{ result.amount?.toFixed(2) || '-' }}
             </p>
           </div>
-          <div class="bg-gray-50 p-3 rounded-lg">
-            <p class="text-gray-500 text-xs">识别商户</p>
-            <p class="font-medium">{{ result.merchant_name || '-' }}</p>
+          <div class="p-3 rounded-lg" style="background: var(--bg-hover);">
+            <p class="text-xs" style="color: var(--text-muted);">识别商户</p>
+            <p class="font-medium" style="color: var(--text-primary);">{{ result.merchant_name || '-' }}</p>
           </div>
-          <div class="bg-gray-50 p-3 rounded-lg">
-            <p class="text-gray-500 text-xs">识别日期</p>
-            <p class="font-medium">{{ result.date || '-' }}</p>
+          <div class="p-3 rounded-lg" style="background: var(--bg-hover);">
+            <p class="text-xs" style="color: var(--text-muted);">识别日期</p>
+            <p class="font-medium" style="color: var(--text-primary);">{{ result.date || '-' }}</p>
           </div>
-          <div class="bg-gray-50 p-3 rounded-lg">
-            <p class="text-gray-500 text-xs">建议分类</p>
-            <p class="font-medium">{{ result.category_guess || '-' }}</p>
+          <div class="p-3 rounded-lg" style="background: var(--bg-hover);">
+            <p class="text-xs" style="color: var(--text-muted);">建议分类</p>
+            <p class="font-medium" style="color: var(--text-primary);">{{ result.category_guess || '-' }}</p>
           </div>
         </div>
 
-        <hr class="my-2" />
+        <hr style="border-color: var(--border-color);" />
 
         <!-- Editable form -->
         <div class="space-y-3">
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">金额 *</label>
+              <label class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">金额 *</label>
               <input
                 v-model.number="forms[index].amount"
                 type="number"
                 step="0.01"
-                class="w-full border rounded-lg px-3 py-2"
+                class="input-gold"
                 required
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">账户 *</label>
-              <select
-                v-model="forms[index].wallet_id"
-                class="w-full border rounded-lg px-3 py-2"
-                required
-              >
+              <label class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">账户 *</label>
+              <select v-model="forms[index].wallet_id" class="input-gold" required>
                 <option v-for="w in walletStore.wallets" :key="w.id" :value="w.id">
                   {{ w.name }}
                 </option>
@@ -362,8 +361,8 @@ onUnmounted(() => { stopPolling() })
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">分类</label>
-            <select v-model="forms[index].category_id" class="w-full border rounded-lg px-3 py-2">
+            <label class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">分类</label>
+            <select v-model="forms[index].category_id" class="input-gold">
               <option :value="null">未分类</option>
               <option v-for="c in categoryStore.categories" :key="c.id" :value="c.id">
                 {{ c.icon }} {{ c.name }}
@@ -372,36 +371,29 @@ onUnmounted(() => { stopPolling() })
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
-            <input
-              v-model="forms[index].note"
-              type="text"
-              class="w-full border rounded-lg px-3 py-2"
-            />
+            <label class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">备注</label>
+            <input v-model="forms[index].note" type="text" class="input-gold" />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
-            <input
-              v-model="forms[index].date"
-              type="datetime-local"
-              class="w-full border rounded-lg px-3 py-2"
-            />
+            <label class="block text-sm font-medium mb-1" style="color: var(--text-secondary);">日期</label>
+            <input v-model="forms[index].date" type="datetime-local" class="input-gold" />
           </div>
         </div>
       </div>
 
       <!-- Save All Button -->
-      <button
-        @click="handleSaveAll"
-        class="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700"
-      >
+      <button @click="handleSaveAll" class="btn-gold w-full py-3">
         保存全部 {{ aiResults.length }} 条记录
       </button>
     </div>
 
     <!-- No results yet -->
-    <div v-if="!aiResults.length && !uploading" class="text-center text-gray-500 py-8">
+    <div
+      v-if="!aiResults.length && !uploading"
+      class="text-center py-8"
+      style="color: var(--text-muted);"
+    >
       <p>上传小票图片，AI 自动识别金额、商户等信息</p>
       <p class="text-sm mt-2">支持同时识别多条消费记录</p>
     </div>

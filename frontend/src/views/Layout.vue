@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter, useRoute, RouterView } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useWalletStore } from '@/stores/wallet'
 import { useAIRecordStore } from '@/stores/aiRecord'
-import RecordModal from '@/components/RecordModal.vue'
+import { useThemeStore } from '@/stores/theme'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const walletStore = useWalletStore()
 const aiRecordStore = useAIRecordStore()
+const themeStore = useThemeStore()
 
 const showSidebar = ref(false)
-const showRecordModal = ref(false)
 
 onMounted(async () => {
   if (authStore.user) {
@@ -35,28 +35,30 @@ function confirmLogout() {
   }
 }
 
+function toggleTheme() {
+  themeStore.toggle()
+}
+
 const navItems = [
   { path: '/', label: '首页', icon: '📊' },
-  { path: '/records', label: '流水', icon: '📝' },
+  { path: '/records', label: '记账', icon: '📝' },
+  { path: '/upload', label: 'AI 识别', icon: '🤖' },
   { path: '/wallets', label: '账户', icon: '💼' },
   { path: '/categories', label: '分类', icon: '🏷️' },
   { path: '/stats', label: '统计', icon: '📈' },
   { path: '/api-keys', label: 'API Keys', icon: '🔑' },
-  { path: '/ai-records', label: 'AI记账记录', icon: '🤖', hasBadge: true },
+  { path: '/ai-records', label: 'AI 记录', icon: '🤖', hasBadge: true },
   { path: '/settings', label: '设置', icon: '⚙️' },
 ]
 
 const currentPath = ref(route.path)
 let isFirstRoute = true
 
-// Keep currentPath in sync with route changes
-watch(() => route.path, (p) => { 
+watch(() => route.path, (p) => {
   currentPath.value = p
-  // 如果用户进入 AI 记录页面，标记为已查看
   if (p === '/ai-records') {
     aiRecordStore.markAsViewed()
   }
-  // 每次路由变化时重新获取待确认记录（除了第一次）
   if (!isFirstRoute && authStore.user) {
     aiRecordStore.fetchPendingRecords()
   }
@@ -65,47 +67,85 @@ watch(() => route.path, (p) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <div class="min-h-screen" style="background-color: var(--bg-primary); color: var(--text-primary);">
     <!-- Mobile Header -->
-    <header class="sticky top-0 z-50 bg-white shadow-sm lg:hidden">
+    <header
+      class="sticky top-0 z-50 lg:hidden border-b"
+      style="background-color: var(--bg-card); border-color: var(--border-color);"
+    >
       <div class="flex items-center justify-between p-4">
-        <button @click="showSidebar = !showSidebar" class="p-2 rounded-lg hover:bg-gray-100">
+        <button
+          @click="showSidebar = !showSidebar"
+          class="p-2 rounded-lg"
+          style="hover:background-color: var(--bg-hover);"
+        >
           <span class="text-xl">☰</span>
         </button>
-        <h1 class="font-bold text-indigo-600">💰 AI记账</h1>
-        <button @click="confirmLogout" class="p-2 rounded-lg hover:bg-gray-100">
-          <span class="text-xl">🚪</span>
-        </button>
+        <h1 class="font-bold text-gold">💰 AI记账</h1>
+        <div class="flex items-center gap-2">
+          <!-- Theme Toggle Mobile -->
+          <button
+            @click="toggleTheme"
+            class="p-2 rounded-lg"
+            style="hover:background-color: var(--bg-hover);"
+          >
+            <span class="text-xl">{{ themeStore.isDark ? '🌙' : '☀️' }}</span>
+          </button>
+          <button
+            @click="confirmLogout"
+            class="p-2 rounded-lg"
+            style="hover:background-color: var(--bg-hover);"
+          >
+            <span class="text-xl">🚪</span>
+          </button>
+        </div>
       </div>
     </header>
 
     <!-- Sidebar -->
     <aside
-      :class="['fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform lg:translate-x-0 lg:static flex flex-col', showSidebar ? 'translate-x-0' : '-translate-x-full']"
+      :class="['fixed inset-y-0 left-0 z-50 w-64 flex flex-col transform transition-transform lg:translate-x-0 lg:static', showSidebar ? 'translate-x-0' : '-translate-x-full']"
+      style="background-color: var(--bg-secondary); border-right: 1px solid var(--border-color);"
     >
-      <div class="p-6 border-b flex-shrink-0">
-        <h1 class="text-2xl font-bold text-indigo-600">💰 AI记账</h1>
-        <p class="text-sm text-gray-500 mt-1">{{ authStore.user?.username }}</p>
+      <!-- Logo -->
+      <div class="p-6 border-b flex-shrink-0" style="border-color: var(--border-color);">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold text-gradient-gold">💰 AI记账</h1>
+            <p class="text-sm mt-1" style="color: var(--text-secondary);">{{ authStore.user?.username }}</p>
+          </div>
+          <!-- Desktop Theme Toggle -->
+          <button
+            @click="toggleTheme"
+            class="p-2 rounded-lg transition"
+            style="hover:background-color: var(--bg-hover);"
+            title="切换主题"
+          >
+            <span class="text-xl">{{ themeStore.isDark ? '🌙' : '☀️' }}</span>
+          </button>
+        </div>
       </div>
 
+      <!-- Navigation -->
       <nav class="p-4 space-y-1 flex-1 overflow-y-auto">
         <router-link
           v-for="item in navItems"
           :key="item.path"
           :to="item.path"
           @click="showSidebar = false"
-          :class="['flex items-center gap-3 px-4 py-3 rounded-lg transition', currentPath === item.path ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50']"
+          :class="['flex items-center gap-3 px-4 py-3 rounded-xl transition', currentPath === item.path ? 'text-gold font-semibold' : '']"
+          :style="currentPath === item.path
+            ? 'background-color: var(--accent-gold-light); color: var(--accent-gold);'
+            : 'color: var(--text-secondary); hover:background-color: var(--bg-hover);'"
         >
           <span class="text-xl relative">
             {{ item.icon }}
-            <!-- 动态小红点 -->
             <span
               v-if="item.hasBadge && aiRecordStore.showBadge"
               class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border-2 border-white"
             />
           </span>
           <span class="flex-1">{{ item.label }}</span>
-          <!-- 数字提示 -->
           <span
             v-if="item.hasBadge && aiRecordStore.pendingCount > 0"
             class="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full"
@@ -115,9 +155,10 @@ watch(() => route.path, (p) => {
         </router-link>
       </nav>
 
-      <div class="p-4 border-t bg-white flex-shrink-0">
-        <div class="text-sm text-gray-500 mb-2">总资产</div>
-        <div class="text-2xl font-bold text-green-600">
+      <!-- Balance Footer -->
+      <div class="p-4 border-t flex-shrink-0" style="border-color: var(--border-color); background-color: var(--bg-card);">
+        <div class="text-sm mb-1" style="color: var(--text-muted);">总资产</div>
+        <div class="text-2xl font-bold text-gold">
           ¥{{ walletStore.totalBalance.toFixed(2) }}
         </div>
       </div>
@@ -127,23 +168,13 @@ watch(() => route.path, (p) => {
     <div
       v-if="showSidebar"
       @click="showSidebar = false"
-      class="fixed inset-0 bg-black/50 z-40 lg:hidden"
+      class="fixed inset-0 z-40 lg:hidden"
+      style="background-color: var(--bg-primary); opacity: 0.7;"
     />
 
     <!-- Main Content -->
     <main class="flex-1 p-6 lg:p-8">
       <RouterView />
     </main>
-
-    <!-- Floating Action Button -->
-    <button
-      @click="showRecordModal = true"
-      class="fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 flex items-center justify-center text-2xl lg:bottom-8 lg:right-8 z-30"
-    >
-      ✏️
-    </button>
-
-    <!-- Record Modal -->
-    <RecordModal :show="showRecordModal" @close="showRecordModal = false" />
   </div>
 </template>
