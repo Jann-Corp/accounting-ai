@@ -5,10 +5,10 @@ from app.database import Base
 
 
 class RecognitionStatus(str, enum.Enum):
-    PENDING = "pending"      # 等待处理
-    PROCESSING = "processing"  # AI 识别中
-    DONE = "done"           # 完成，已生成记录
-    FAILED = "failed"       # 识别失败
+    PENDING = "PENDING"      # 等待处理
+    PROCESSING = "PROCESSING"  # AI 识别中
+    DONE = "DONE"           # 完成，已生成记录
+    FAILED = "FAILED"       # 识别失败
 
 
 class AIRecognitionJob(Base):

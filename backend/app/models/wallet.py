@@ -5,10 +5,10 @@ from app.database import Base
 
 
 class WalletType(str, enum.Enum):
-    BANK_CARD = "bank_card"
-    E_WALLET = "e_wallet"
-    CASH = "cash"
-    OTHER = "other"
+    BANK_CARD = "BANK_CARD"
+    E_WALLET = "E_WALLET"
+    CASH = "CASH"
+    OTHER = "OTHER"
 
 
 class Wallet(Base):
@@ -17,7 +17,7 @@ class Wallet(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(100), nullable=False)
-    wallet_type = Column(String(20), default="other")
+    wallet_type = Column(String(20), default="OTHER")
     balance = Column(Float, default=0.0)
     currency = Column(String(10), default="CNY")
     created_at = Column(DateTime, server_default=func.now())
