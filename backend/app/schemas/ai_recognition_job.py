@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List
 from datetime import datetime
 from app.models.ai_recognition_job import RecognitionStatus
@@ -34,6 +34,13 @@ class AIRecognitionJobResponse(AIRecognitionJobBase):
 
     class Config:
         from_attributes = True
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalize_status(cls, v):
+        if isinstance(v, str):
+            return v.upper()
+        return v
 
 
 class AIRecognitionJobDetailResponse(AIRecognitionJobResponse):

@@ -98,117 +98,170 @@ function formatCurrency(amount: number) {
 
 <template>
   <div class="space-y-6">
+    <!-- Header -->
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-800">💼 账户管理</h1>
+      <h1 class="text-2xl font-bold" style="color: var(--text-primary);">💼 账户管理</h1>
       <div class="flex gap-2">
         <button
           @click="openTransferModal"
-          class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200"
+          class="btn-gold-outline"
+          :disabled="walletStore.wallets.length < 2"
         >
           转账
         </button>
-        <button
-          @click="openAddModal"
-          class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-        >
+        <button @click="openAddModal" class="btn-gold">
           + 添加账户
         </button>
       </div>
     </div>
 
-    <!-- Total Balance -->
-    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white">
-      <p class="text-indigo-100 mb-1">总资产</p>
-      <p class="text-4xl font-bold">{{ formatCurrency(walletStore.totalBalance) }}</p>
+    <!-- Total Balance Hero -->
+    <div
+      class="rounded-2xl p-6 text-white relative overflow-hidden"
+      style="background: linear-gradient(135deg, #B8922E, #D4A843, #F5D98B); box-shadow: var(--shadow-gold);"
+    >
+      <div class="absolute top-0 right-0 w-40 h-40 opacity-10 text-9xl">💰</div>
+      <p class="text-sm mb-1" style="color: rgba(255,255,255,0.8);">总资产</p>
+      <p class="text-4xl font-bold text-amount">{{ formatCurrency(walletStore.totalBalance) }}</p>
     </div>
 
-    <!-- Wallet List -->
+    <!-- Wallet Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div
         v-for="wallet in walletStore.wallets"
         :key="wallet.id"
-        class="bg-white rounded-2xl shadow-sm p-6"
+        class="rounded-2xl p-5 transition"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-md);"
       >
         <div class="flex justify-between items-start mb-4">
           <div class="flex items-center gap-3">
-            <span class="text-3xl">
-              {{ wallet.wallet_type === 'cash' ? '💵' : wallet.wallet_type === 'bank_card' ? '🏦' : wallet.wallet_type === 'e_wallet' ? '💳' : '💳' }}
-            </span>
+            <div
+              class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+              style="background: var(--accent-gold-light);"
+            >
+              {{ wallet.wallet_type === 'cash' ? '💵' : wallet.wallet_type === 'bank_card' ? '🏦' : '💳' }}
+            </div>
             <div>
-              <p class="font-bold text-lg">{{ wallet.name }}</p>
-              <p class="text-sm text-gray-500">{{ walletTypeOptions.find(t => t.value === wallet.wallet_type)?.label }}</p>
+              <p class="font-bold" style="color: var(--text-primary);">{{ wallet.name }}</p>
+              <p class="text-sm" style="color: var(--text-muted);">
+                {{ walletTypeOptions.find(t => t.value === wallet.wallet_type)?.label }}
+              </p>
             </div>
           </div>
           <div class="flex gap-1">
-            <button @click="openEditModal(wallet)" class="p-2 hover:bg-gray-100 rounded-lg">✏️</button>
-            <button @click="handleDelete(wallet.id)" class="p-2 hover:bg-red-50 rounded-lg">🗑️</button>
+            <button
+              @click="openEditModal(wallet)"
+              class="p-2 rounded-lg transition"
+              style="color: var(--text-muted); hover:background: var(--bg-hover);"
+            >
+              ✏️
+            </button>
+            <button
+              @click="handleDelete(wallet.id)"
+              class="p-2 rounded-lg transition"
+              style="color: var(--text-muted);"
+            >
+              🗑️
+            </button>
           </div>
         </div>
-        <p :class="['text-2xl font-bold', wallet.balance >= 0 ? 'text-green-600' : 'text-red-600']">
+        <p
+          class="text-2xl font-bold text-amount"
+          :style="{ color: wallet.balance >= 0 ? 'var(--income-color)' : 'var(--expense-color)' }"
+        >
           {{ formatCurrency(wallet.balance) }}
         </p>
       </div>
     </div>
 
-    <div v-if="walletStore.wallets.length === 0" class="text-center py-12 text-gray-500 bg-white rounded-2xl">
+    <div
+      v-if="walletStore.wallets.length === 0"
+      class="text-center py-12 rounded-2xl"
+      style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted);"
+    >
       还没有账户，添加一个开始记账吧
     </div>
 
     <!-- Add/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">{{ editingWallet ? '编辑账户' : '添加账户' }}</h2>
+    <div
+      v-if="showModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay"
+      @click.self="showModal = false"
+    >
+      <div
+        class="rounded-2xl p-6 w-full max-w-md"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);"
+      >
+        <h2 class="text-xl font-bold mb-6" style="color: var(--text-primary);">
+          {{ editingWallet ? '✏️ 编辑账户' : '➕ 添加账户' }}
+        </h2>
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <div>
-            <label for="wallet-name" class="block text-sm font-medium text-gray-700 mb-1">账户名称</label>
-            <input id="wallet-name" v-model="form.name" type="text" class="w-full border rounded-lg px-3 py-2" required />
+            <label class="block text-sm font-medium mb-1.5" style="color: var(--text-secondary);">账户名称</label>
+            <input v-model="form.name" type="text" class="input-gold" placeholder="例如：招商银行卡" required />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">账户类型</label>
-            <select v-model="form.wallet_type" class="w-full border rounded-lg px-3 py-2">
+            <label class="block text-sm font-medium mb-1.5" style="color: var(--text-secondary);">账户类型</label>
+            <select v-model="form.wallet_type" class="input-gold">
               <option v-for="opt in walletTypeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">初始余额</label>
-            <input v-model.number="form.balance" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" />
+            <label class="block text-sm font-medium mb-1.5" style="color: var(--text-secondary);">初始余额</label>
+            <input v-model.number="form.balance" type="number" step="0.01" class="input-gold" placeholder="0.00" />
           </div>
           <div class="flex gap-3 pt-2">
-            <button type="button" @click="showModal = false" class="flex-1 py-2 border rounded-lg">取消</button>
-            <button type="submit" :disabled="submitting" class="flex-1 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50">{{ submitting ? '保存中...' : '保存' }}</button>
+            <button type="button" @click="showModal = false" class="flex-1 py-2.5 rounded-xl border" style="border-color: var(--border-color); color: var(--text-secondary);">
+              取消
+            </button>
+            <button type="submit" :disabled="submitting" class="flex-1 btn-gold">
+              {{ submitting ? '保存中...' : '保存' }}
+            </button>
           </div>
         </form>
       </div>
     </div>
 
     <!-- Transfer Modal -->
-    <div v-if="showTransferModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">💸 转账</h2>
+    <div
+      v-if="showTransferModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay"
+      @click.self="showTransferModal = false"
+    >
+      <div
+        class="rounded-2xl p-6 w-full max-w-md"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);"
+      >
+        <h2 class="text-xl font-bold mb-6" style="color: var(--text-primary);">💸 转账</h2>
         <form @submit.prevent="handleTransfer" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">从</label>
-            <select v-model="transferForm.from_wallet_id" class="w-full border rounded-lg px-3 py-2" required>
+            <label class="block text-sm font-medium mb-1.5" style="color: var(--text-secondary);">从</label>
+            <select v-model="transferForm.from_wallet_id" class="input-gold" required>
+              <option v-for="w in walletStore.wallets" :key="w.id" :value="w.id">{{ w.name }}</option>
+            </select>
+          </div>
+          <div class="flex justify-center">
+            <span class="text-2xl" style="color: var(--accent-gold);">↓</span>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1.5" style="color: var(--text-secondary);">到</label>
+            <select v-model="transferForm.to_wallet_id" class="input-gold" required>
               <option v-for="w in walletStore.wallets" :key="w.id" :value="w.id">{{ w.name }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">到</label>
-            <select v-model="transferForm.to_wallet_id" class="w-full border rounded-lg px-3 py-2" required>
-              <option v-for="w in walletStore.wallets" :key="w.id" :value="w.id">{{ w.name }}</option>
-            </select>
+            <label class="block text-sm font-medium mb-1.5" style="color: var(--text-secondary);">金额</label>
+            <input v-model.number="transferForm.amount" type="number" step="0.01" class="input-gold" placeholder="0.00" required />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">金额</label>
-            <input v-model.number="transferForm.amount" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" required />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
-            <input v-model="transferForm.note" type="text" class="w-full border rounded-lg px-3 py-2" />
+            <label class="block text-sm font-medium mb-1.5" style="color: var(--text-secondary);">备注</label>
+            <input v-model="transferForm.note" type="text" class="input-gold" placeholder="可选" />
           </div>
           <div class="flex gap-3 pt-2">
-            <button type="button" @click="showTransferModal = false" class="flex-1 py-2 border rounded-lg">取消</button>
-            <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-lg">转账</button>
+            <button type="button" @click="showTransferModal = false" class="flex-1 py-2.5 rounded-xl border" style="border-color: var(--border-color); color: var(--text-secondary);">
+              取消
+            </button>
+            <button type="submit" class="flex-1 btn-gold">转账</button>
           </div>
         </form>
       </div>

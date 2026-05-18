@@ -5,7 +5,7 @@ import traceback
 
 from app.core.config import settings
 from app.core.logging import logger
-from app.api import auth, wallets, categories, records, ai, stats, export, apikeys
+from app.api import auth, wallets, categories, records, ai, stats, export, apikeys, exchange_rates
 
 # Run Alembic migrations on startup
 def run_migrations():
@@ -76,6 +76,7 @@ app.include_router(records.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
 app.include_router(stats.router, prefix="/api/v1")
 app.include_router(apikeys.router, prefix="/api/v1")
+app.include_router(exchange_rates.router, prefix="/api/v1")
 
 
 @app.get("/health")

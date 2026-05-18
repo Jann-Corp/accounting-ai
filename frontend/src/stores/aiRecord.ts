@@ -26,7 +26,9 @@ export const useAIRecordStore = defineStore('aiRecord', () => {
   const hasViewedPending = ref(false)
 
   const hasPendingRecords = computed(() => pendingRecords.value.length > 0)
+
   const pendingCount = computed(() => pendingRecords.value.length)
+
   const showBadge = computed(() => hasPendingRecords.value && !hasViewedPending.value)
 
   async function fetchPendingRecords() {
@@ -35,12 +37,10 @@ export const useAIRecordStore = defineStore('aiRecord', () => {
       const res = await aiApi.listPendingRecords()
       const oldCount = pendingRecords.value.length
       pendingRecords.value = res.data
-      
-      // 如果有新增的待确认记录，重置 viewed 状态
+
       if (res.data.length > oldCount) {
         hasViewedPending.value = false
       }
-      
       lastFetchedAt.value = Date.now()
     } finally {
       loading.value = false

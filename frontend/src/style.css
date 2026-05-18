@@ -5,3 +5,335 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
+
+/* ============================================
+   暗金仪表盘 · 浅色模式 CSS 变量
+   ============================================ */
+:root {
+  --bg-primary: #FDFBF7;
+  --bg-secondary: #F5F0E8;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F0EBE3;
+  --text-primary: #1C1917;
+  --text-secondary: #78716C;
+  --text-muted: #A8A29E;
+  --border-color: #E7E5E4;
+  --border-strong: #D6D3D1;
+  --accent-gold: #D4A843;
+  --accent-gold-light: #F5E6C8;
+  --accent-gold-dark: #B8922E;
+  --shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.05);
+  --shadow-md: 0 4px 12px rgba(28, 25, 23, 0.08);
+  --shadow-lg: 0 8px 24px rgba(28, 25, 23, 0.12);
+  --shadow-gold: 0 4px 16px rgba(212, 168, 67, 0.2);
+  --gradient-gold: linear-gradient(135deg, #D4A843, #F5E6C8, #D4A843);
+  --gradient-dark-gold: linear-gradient(135deg, #B8922E, #8B6914, #D4A843);
+  --income-color: #16A34A;
+  --expense-color: #DC2626;
+  --transfer-color: #2563EB;
+  --chart-colors-0: #D4A843;
+  --chart-colors-1: #2563EB;
+  --chart-colors-2: #16A34A;
+  --chart-colors-3: #9333EA;
+  --chart-colors-4: #EA580C;
+  --scrollbar-track: #F5F0E8;
+  --scrollbar-thumb: #D6D3D1;
+  --scrollbar-thumb-hover: #A8A29E;
+}
+
+/* ============================================
+   暗金仪表盘 · 深色模式 CSS 变量
+   ============================================ */
+.dark {
+  --bg-primary: #0F0E0C;
+  --bg-secondary: #1C1917;
+  --bg-card: #26221E;
+  --bg-hover: #302B27;
+  --text-primary: #F5F0E8;
+  --text-secondary: #A8A29E;
+  --text-muted: #78716C;
+  --border-color: #3D3830;
+  --border-strong: #57534E;
+  --accent-gold: #D4A843;
+  --accent-gold-light: #3D3520;
+  --accent-gold-dark: #F5D98B;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-gold: 0 4px 16px rgba(212, 168, 67, 0.15);
+  --gradient-gold: linear-gradient(135deg, #D4A843, #3D3520, #D4A843);
+  --gradient-dark-gold: linear-gradient(135deg, #F5D98B, #B8922E, #D4A843);
+  --income-color: #22C55E;
+  --expense-color: #EF4444;
+  --transfer-color: #3B82F6;
+  --chart-colors-0: #D4A843;
+  --chart-colors-1: #3B82F6;
+  --chart-colors-2: #22C55E;
+  --chart-colors-3: #A855F7;
+  --chart-colors-4: #F97316;
+  --scrollbar-track: #1C1917;
+  --scrollbar-thumb: #3D3830;
+  --scrollbar-thumb-hover: #57534E;
+}
+
+/* ============================================
+   基础样式
+   ============================================ */
+*, *::before, *::after {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* ============================================
+   暗金主题卡片
+   ============================================ */
+.card-gold {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.card-gold:hover {
+  box-shadow: var(--shadow-gold);
+  border-color: var(--accent-gold);
+}
+
+/* ============================================
+   暗金主题按钮
+   ============================================ */
+.btn-gold {
+  background: var(--gradient-gold);
+  color: #1C1917;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-gold);
+  transition: all 0.2s ease;
+}
+
+.btn-gold:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(212, 168, 67, 0.3);
+}
+
+.btn-gold:active {
+  transform: translateY(0);
+}
+
+.btn-gold-outline {
+  background: transparent;
+  color: var(--accent-gold);
+  border: 1.5px solid var(--accent-gold);
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-gold-outline:hover {
+  background: var(--accent-gold-light);
+}
+
+/* ============================================
+   暗金主题输入框
+   ============================================ */
+.input-gold {
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-primary);
+  padding: 10px 14px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-gold:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.15);
+}
+
+.input-gold::placeholder {
+  color: var(--text-muted);
+}
+
+/* ============================================
+   暗金徽章
+   ============================================ */
+.badge-gold {
+  background: var(--accent-gold-light);
+  color: var(--accent-gold-dark);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dark .badge-gold {
+  background: rgba(212, 168, 67, 0.15);
+  color: var(--accent-gold);
+}
+
+/* ============================================
+   数字展示（大字）
+   ============================================ */
+.text-amount {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.text-income { color: var(--income-color); }
+.text-expense { color: var(--expense-color); }
+.text-transfer { color: var(--transfer-color); }
+.text-gold { color: var(--accent-gold); }
+
+/* ============================================
+   侧边栏
+   ============================================ */
+.sidebar {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+}
+
+/* ============================================
+   滚动条
+   ============================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* ============================================
+   渐变文字
+   ============================================ */
+.text-gradient-gold {
+  background: var(--gradient-dark-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   复选框美化
+   ============================================ */
+input[type="checkbox"] {
+  accent-color: var(--accent-gold);
+}
+
+/* ============================================
+   Select 美化
+   ============================================ */
+select {
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-primary);
+  padding: 10px 14px;
+  outline: none;
+  cursor: pointer;
+}
+
+select:focus {
+  border-color: var(--accent-gold);
+}
+
+/* ============================================
+   Modal 遮罩
+   ============================================ */
+.modal-overlay {
+  background: rgba(15, 14, 12, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* ============================================
+   表格
+   ============================================ */
+.table-gold {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-gold th {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-gold td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.table-gold tr:hover td {
+  background: var(--bg-hover);
+}
+
+/* ============================================
+   Switch 开关
+   ============================================ */
+.toggle-gold {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  background: var(--border-color);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.toggle-gold.active {
+  background: var(--accent-gold);
+}
+
+.toggle-gold::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.toggle-gold.active::after {
+  transform: translateX(22px);
+}

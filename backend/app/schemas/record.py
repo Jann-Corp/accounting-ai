@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List
 from datetime import datetime
 from app.models.record import RecordType, RecordStatus
@@ -11,6 +11,13 @@ class RecordBase(BaseModel):
     note: Optional[str] = None
     wallet_id: Optional[int] = None
     category_id: Optional[int] = None
+
+    @field_validator("record_type", mode="before")
+    @classmethod
+    def normalize_record_type(cls, v):
+        if isinstance(v, str):
+            return v.upper()
+        return v
 
 
 class RecordCreate(RecordBase):
@@ -25,6 +32,13 @@ class RecordUpdate(BaseModel):
     note: Optional[str] = None
     wallet_id: Optional[int] = None
     category_id: Optional[int] = None
+
+    @field_validator("record_type", mode="before")
+    @classmethod
+    def normalize_record_type(cls, v):
+        if isinstance(v, str):
+            return v.upper()
+        return v
 
 
 class RecordResponse(RecordBase):
@@ -57,6 +71,13 @@ class RecordFilter(BaseModel):
     status: Optional[RecordStatus] = None
     limit: int = 50
     offset: int = 0
+
+    @field_validator("record_type", "status", mode="before")
+    @classmethod
+    def normalize_field(cls, v):
+        if isinstance(v, str):
+            return v.upper()
+        return v
 
 
 class AIRecognizeRecord(BaseModel):
