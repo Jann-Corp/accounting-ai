@@ -17,7 +17,7 @@ async function handleSave() {
   saving.value = true
   error.value = ''
   success.value = ''
-  
+
   try {
     await authStore.updateDefaultWallet(selectedWalletId.value)
     success.value = '设置已保存'
@@ -38,20 +38,20 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto space-y-6">
-    <h1 class="text-2xl font-bold text-gray-800">⚙️ 设置</h1>
+  <div class="max-w-2xl mx-auto space-y-8">
+    <h1 class="text-4xl font-medium text-gray-900 tracking-tight" style="letter-spacing: -0.4px;">⚙️ 设置</h1>
 
     <!-- Default Wallet Setting -->
-    <div class="bg-white rounded-2xl shadow-sm p-6">
-      <h2 class="text-lg font-semibold text-gray-700 mb-4">📦 默认账户设置</h2>
-      <p class="text-sm text-gray-500 mb-4">
+    <div class="bg-white rounded-2xl p-8 border border-gray-100">
+      <h2 class="text-xl font-medium text-gray-900 mb-3" style="letter-spacing: -0.32px;">📦 默认账户设置</h2>
+      <p class="text-sm text-gray-500 mb-6" style="letter-spacing: 0.16px;">
         选择 AI 识别记账时默认使用的账户。您可以在上传页面单独修改每条记录的账户。
       </p>
-      
-      <div class="space-y-4">
+
+      <div class="space-y-5">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">默认账户</label>
-          <select v-model="selectedWalletId" class="w-full border rounded-lg px-3 py-2">
+          <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">默认账户</label>
+          <select v-model="selectedWalletId" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all">
             <option :value="null">不设置（每次手动选择）</option>
             <option v-for="w in walletStore.wallets" :key="w.id" :value="w.id">
               {{ w.name }}
@@ -60,17 +60,17 @@ onMounted(async () => {
         </div>
 
         <!-- Success/Error Messages -->
-        <div v-if="success" class="bg-green-50 text-green-600 p-3 rounded-lg text-sm">
+        <div v-if="success" class="bg-emerald-50 text-emerald-700 p-4 rounded-xl text-sm border border-emerald-100" style="letter-spacing: 0.16px;">
           {{ success }}
         </div>
-        <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+        <div v-if="error" class="bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100" style="letter-spacing: 0.16px;">
           {{ error }}
         </div>
 
         <button
           @click="handleSave"
           :disabled="saving"
-          class="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full py-3.5 bg-gray-900 text-white rounded-full font-medium hover:opacity-85 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed text-base"
         >
           {{ saving ? '保存中...' : '保存设置' }}
         </button>
@@ -78,20 +78,20 @@ onMounted(async () => {
     </div>
 
     <!-- Current User Info -->
-    <div class="bg-white rounded-2xl shadow-sm p-6">
-      <h2 class="text-lg font-semibold text-gray-700 mb-4">👤 账户信息</h2>
-      <div class="space-y-2 text-sm">
-        <div class="flex justify-between py-2 border-b">
-          <span class="text-gray-500">用户名</span>
-          <span class="font-medium">{{ authStore.user?.username }}</span>
+    <div class="bg-white rounded-2xl p-8 border border-gray-100">
+      <h2 class="text-xl font-medium text-gray-900 mb-6" style="letter-spacing: -0.32px;">👤 账户信息</h2>
+      <div class="space-y-4 text-sm">
+        <div class="flex justify-between py-3 border-b border-gray-100">
+          <span class="text-gray-500" style="letter-spacing: 0.16px;">用户名</span>
+          <span class="font-medium text-gray-900">{{ authStore.user?.username }}</span>
         </div>
-        <div class="flex justify-between py-2 border-b">
-          <span class="text-gray-500">邮箱</span>
-          <span class="font-medium">{{ authStore.user?.email }}</span>
+        <div class="flex justify-between py-3 border-b border-gray-100">
+          <span class="text-gray-500" style="letter-spacing: 0.16px;">邮箱</span>
+          <span class="font-medium text-gray-900">{{ authStore.user?.email }}</span>
         </div>
-        <div class="flex justify-between py-2">
-          <span class="text-gray-500">注册时间</span>
-          <span class="font-medium">{{ new Date(authStore.user?.created_at || '').toLocaleDateString('zh-CN') }}</span>
+        <div class="flex justify-between py-3">
+          <span class="text-gray-500" style="letter-spacing: 0.16px;">注册时间</span>
+          <span class="font-medium text-gray-900">{{ new Date(authStore.user?.created_at || '').toLocaleDateString('zh-CN') }}</span>
         </div>
       </div>
     </div>

@@ -75,64 +75,72 @@ function getBarWidth(amount: number, max: number) {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <h1 class="text-2xl font-bold text-gray-800">📈 统计报表</h1>
+  <div class="space-y-8">
+    <h1 class="text-5xl font-semibold text-gray-900 tracking-tight">统计报表</h1>
 
     <!-- Month Selector -->
-    <div class="bg-white rounded-2xl shadow-sm p-6">
+    <div class="border border-gray-100 bg-white rounded-2xl p-6">
       <div class="flex items-center justify-between">
-        <button @click="prevMonth" class="p-2 hover:bg-gray-100 rounded-lg">◀</button>
-        <span class="text-xl font-bold">{{ currentMonthLabel }}</span>
-        <button @click="nextMonth" class="p-2 hover:bg-gray-100 rounded-lg">▶</button>
+        <button @click="prevMonth" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <span class="text-xl font-semibold text-gray-900">{{ currentMonthLabel }}</span>
+        <button @click="nextMonth" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </div>
 
-    <div v-if="loading" class="text-center py-12">加载中...</div>
+    <div v-if="loading" class="text-center py-16 text-gray-400">加载中...</div>
 
     <template v-else>
       <!-- Monthly Summary -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-2xl shadow-sm p-6">
-          <p class="text-gray-500 mb-1">本月收入</p>
-          <p class="text-2xl font-bold text-green-600">{{ formatCurrency(monthlyStats?.total_income || 0) }}</p>
+        <div class="border border-gray-100 bg-white rounded-2xl p-6">
+          <p class="text-gray-500 mb-2 text-sm">本月收入</p>
+          <p class="text-2xl font-semibold text-emerald-600">{{ formatCurrency(monthlyStats?.total_income || 0) }}</p>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm p-6">
-          <p class="text-gray-500 mb-1">本月支出</p>
-          <p class="text-2xl font-bold text-red-600">{{ formatCurrency(monthlyStats?.total_expense || 0) }}</p>
+        <div class="border border-gray-100 bg-white rounded-2xl p-6">
+          <p class="text-gray-500 mb-2 text-sm">本月支出</p>
+          <p class="text-2xl font-semibold text-red-500">{{ formatCurrency(monthlyStats?.total_expense || 0) }}</p>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm p-6">
-          <p class="text-gray-500 mb-1">本月结余</p>
-          <p :class="['text-2xl font-bold', (monthlyStats?.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600']">
+        <div class="border border-gray-100 bg-white rounded-2xl p-6">
+          <p class="text-gray-500 mb-2 text-sm">本月结余</p>
+          <p :class="['text-2xl font-semibold', (monthlyStats?.balance || 0) >= 0 ? 'text-emerald-600' : 'text-red-500']">
             {{ formatCurrency(monthlyStats?.balance || 0) }}
           </p>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm p-6">
-          <p class="text-gray-500 mb-1">记录数</p>
-          <p class="text-2xl font-bold text-indigo-600">{{ monthlyStats?.record_count || 0 }}</p>
+        <div class="border border-gray-100 bg-white rounded-2xl p-6">
+          <p class="text-gray-500 mb-2 text-sm">记录数</p>
+          <p class="text-2xl font-semibold text-gray-900">{{ monthlyStats?.record_count || 0 }}</p>
         </div>
       </div>
 
       <!-- Category Breakdown -->
-      <div class="bg-white rounded-2xl shadow-sm p-6">
-        <h2 class="text-lg font-semibold mb-4">📊 支出分类</h2>
-        <div v-if="categoryBreakdown.length === 0" class="text-center py-8 text-gray-500">
+      <div class="border border-gray-100 bg-white rounded-2xl p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6 tracking-tight">支出分类</h2>
+        <div v-if="categoryBreakdown.length === 0" class="text-center py-12 text-gray-400">
           暂无数据
         </div>
-        <div v-else class="space-y-4">
-          <div v-for="cat in categoryBreakdown" :key="cat.category_id" class="space-y-1">
+        <div v-else class="space-y-5">
+          <div v-for="cat in categoryBreakdown" :key="cat.category_id" class="space-y-2">
             <div class="flex justify-between items-center">
-              <span class="flex items-center gap-2">
+              <span class="flex items-center gap-3">
                 <span class="text-xl">{{ cat.category_icon }}</span>
-                <span class="font-medium">{{ cat.category_name }}</span>
+                <span class="font-medium text-gray-900">{{ cat.category_name }}</span>
               </span>
               <span class="text-right">
-                <span class="font-bold">{{ formatCurrency(cat.total_amount) }}</span>
+                <span class="font-semibold text-gray-900">{{ formatCurrency(cat.total_amount) }}</span>
                 <span class="text-gray-400 text-sm ml-2">{{ formatPercent(cat.percentage) }}</span>
               </span>
             </div>
-            <div class="h-3 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
               <div
-                class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all"
+                class="h-full bg-gray-900 rounded-full transition-all"
                 :style="{ width: `${getBarWidth(cat.total_amount, categoryBreakdown[0]?.total_amount || 1)}%` }"
               />
             </div>
@@ -142,17 +150,17 @@ function getBarWidth(amount: number, max: number) {
       </div>
 
       <!-- Trend Chart -->
-      <div class="bg-white rounded-2xl shadow-sm p-6">
-        <h2 class="text-lg font-semibold mb-4">📈 收支趋势（近6月）</h2>
-        <div v-if="trendData.length === 0" class="text-center py-8 text-gray-500">
+      <div class="border border-gray-100 bg-white rounded-2xl p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6 tracking-tight">收支趋势（近6月）</h2>
+        <div v-if="trendData.length === 0" class="text-center py-12 text-gray-400">
           暂无数据
         </div>
-        <div v-else class="space-y-4">
-          <div class="flex items-end justify-around h-48 gap-2">
+        <div v-else class="space-y-5">
+          <div class="flex items-end justify-around h-56 gap-2">
             <div v-for="point in trendData" :key="`${point.year}-${point.month}`" class="flex-1 flex flex-col items-center gap-2">
               <div class="w-full flex flex-col-reverse gap-1" style="height: 120px">
                 <div
-                  class="w-full bg-green-400 rounded-t transition-all"
+                  class="w-full bg-emerald-400 rounded-t transition-all"
                   :style="{ height: `${getBarWidth(point.total_income, Math.max(...trendData.map(p => Math.max(p.total_income, p.total_expense))))}%` }"
                 />
                 <div
@@ -163,9 +171,9 @@ function getBarWidth(amount: number, max: number) {
               <span class="text-xs text-gray-500">{{ point.month }}月</span>
             </div>
           </div>
-          <div class="flex justify-center gap-6 text-sm">
-            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-green-400 rounded"></span> 收入</span>
-            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-400 rounded"></span> 支出</span>
+          <div class="flex justify-center gap-6 text-sm text-gray-600">
+            <span class="flex items-center gap-2"><span class="w-3 h-3 bg-emerald-400 rounded"></span> 收入</span>
+            <span class="flex items-center gap-2"><span class="w-3 h-3 bg-red-400 rounded"></span> 支出</span>
           </div>
         </div>
       </div>

@@ -97,19 +97,19 @@ function formatCurrency(amount: number) {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-800">💼 账户管理</h1>
-      <div class="flex gap-2">
+  <div class="space-y-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <h1 class="text-4xl font-medium text-gray-900 tracking-tight" style="letter-spacing: -0.4px;">💼 账户管理</h1>
+      <div class="flex gap-3">
         <button
           @click="openTransferModal"
-          class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200"
+          class="px-6 py-3 bg-white text-gray-900 rounded-full font-medium hover:bg-gray-100 transition-colors border border-gray-200 text-base"
         >
           转账
         </button>
         <button
           @click="openAddModal"
-          class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+          class="px-6 py-3 bg-gray-900 text-white rounded-full font-medium hover:opacity-85 transition-opacity text-base"
         >
           + 添加账户
         </button>
@@ -117,98 +117,98 @@ function formatCurrency(amount: number) {
     </div>
 
     <!-- Total Balance -->
-    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white">
-      <p class="text-indigo-100 mb-1">总资产</p>
-      <p class="text-4xl font-bold">{{ formatCurrency(walletStore.totalBalance) }}</p>
+    <div class="bg-gray-900 rounded-2xl p-8 text-white border border-gray-200">
+      <p class="text-gray-400 mb-2 text-sm font-medium" style="letter-spacing: 0.16px;">总资产</p>
+      <p class="text-5xl font-medium tracking-tight" style="letter-spacing: -0.32px;">{{ formatCurrency(walletStore.totalBalance) }}</p>
     </div>
 
     <!-- Wallet List -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div v-if="walletStore.wallets.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div
         v-for="wallet in walletStore.wallets"
         :key="wallet.id"
-        class="bg-white rounded-2xl shadow-sm p-6"
+        class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
       >
-        <div class="flex justify-between items-start mb-4">
-          <div class="flex items-center gap-3">
-            <span class="text-3xl">
+        <div class="flex justify-between items-start mb-5">
+          <div class="flex items-center gap-4">
+            <span class="text-4xl">
               {{ wallet.wallet_type === 'cash' ? '💵' : wallet.wallet_type === 'bank_card' ? '🏦' : wallet.wallet_type === 'e_wallet' ? '💳' : '💳' }}
             </span>
             <div>
-              <p class="font-bold text-lg">{{ wallet.name }}</p>
-              <p class="text-sm text-gray-500">{{ walletTypeOptions.find(t => t.value === wallet.wallet_type)?.label }}</p>
+              <p class="text-xl font-medium text-gray-900" style="letter-spacing: 0.24px;">{{ wallet.name }}</p>
+              <p class="text-sm text-gray-500 mt-1" style="letter-spacing: 0.16px;">{{ walletTypeOptions.find(t => t.value === wallet.wallet_type)?.label }}</p>
             </div>
           </div>
-          <div class="flex gap-1">
-            <button @click="openEditModal(wallet)" class="p-2 hover:bg-gray-100 rounded-lg">✏️</button>
-            <button @click="handleDelete(wallet.id)" class="p-2 hover:bg-red-50 rounded-lg">🗑️</button>
+          <div class="flex gap-2">
+            <button @click="openEditModal(wallet)" class="p-2 hover:bg-gray-100 rounded-full transition-colors">✏️</button>
+            <button @click="handleDelete(wallet.id)" class="p-2 hover:bg-red-50 rounded-full transition-colors">🗑️</button>
           </div>
         </div>
-        <p :class="['text-2xl font-bold', wallet.balance >= 0 ? 'text-green-600' : 'text-red-600']">
+        <p :class="['text-3xl font-medium tracking-tight', wallet.balance >= 0 ? 'text-emerald-600' : 'text-red-500']" style="letter-spacing: -0.32px;">
           {{ formatCurrency(wallet.balance) }}
         </p>
       </div>
     </div>
 
-    <div v-if="walletStore.wallets.length === 0" class="text-center py-12 text-gray-500 bg-white rounded-2xl">
-      还没有账户，添加一个开始记账吧
+    <div v-else class="text-center py-16 text-gray-500 bg-white rounded-2xl border border-gray-100">
+      <p class="text-lg mb-4" style="letter-spacing: 0.24px;">还没有账户，添加一个开始记账吧</p>
     </div>
 
     <!-- Add/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">{{ editingWallet ? '编辑账户' : '添加账户' }}</h2>
-        <form @submit.prevent="handleSubmit" class="space-y-4">
+    <div v-if="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl p-8 w-full max-w-md border border-gray-100">
+        <h2 class="text-2xl font-medium text-gray-900 mb-6" style="letter-spacing: -0.32px;">{{ editingWallet ? '编辑账户' : '添加账户' }}</h2>
+        <form @submit.prevent="handleSubmit" class="space-y-5">
           <div>
-            <label for="wallet-name" class="block text-sm font-medium text-gray-700 mb-1">账户名称</label>
-            <input id="wallet-name" v-model="form.name" type="text" class="w-full border rounded-lg px-3 py-2" required />
+            <label for="wallet-name" class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">账户名称</label>
+            <input id="wallet-name" v-model="form.name" type="text" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all" required />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">账户类型</label>
-            <select v-model="form.wallet_type" class="w-full border rounded-lg px-3 py-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">账户类型</label>
+            <select v-model="form.wallet_type" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all">
               <option v-for="opt in walletTypeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">初始余额</label>
-            <input v-model.number="form.balance" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" />
+            <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">初始余额</label>
+            <input v-model.number="form.balance" type="number" step="0.01" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all" />
           </div>
-          <div class="flex gap-3 pt-2">
-            <button type="button" @click="showModal = false" class="flex-1 py-2 border rounded-lg">取消</button>
-            <button type="submit" :disabled="submitting" class="flex-1 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50">{{ submitting ? '保存中...' : '保存' }}</button>
+          <div class="flex gap-3 pt-3">
+            <button type="button" @click="showModal = false" class="flex-1 py-3 border border-gray-200 rounded-full font-medium hover:bg-gray-100 transition-colors text-base">取消</button>
+            <button type="submit" :disabled="submitting" class="flex-1 py-3 bg-gray-900 text-white rounded-full font-medium hover:opacity-85 transition-opacity disabled:opacity-50 text-base">{{ submitting ? '保存中...' : '保存' }}</button>
           </div>
         </form>
       </div>
     </div>
 
     <!-- Transfer Modal -->
-    <div v-if="showTransferModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">💸 转账</h2>
-        <form @submit.prevent="handleTransfer" class="space-y-4">
+    <div v-if="showTransferModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl p-8 w-full max-w-md border border-gray-100">
+        <h2 class="text-2xl font-medium text-gray-900 mb-6" style="letter-spacing: -0.32px;">💸 转账</h2>
+        <form @submit.prevent="handleTransfer" class="space-y-5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">从</label>
-            <select v-model="transferForm.from_wallet_id" class="w-full border rounded-lg px-3 py-2" required>
+            <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">从</label>
+            <select v-model="transferForm.from_wallet_id" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all" required>
               <option v-for="w in walletStore.wallets" :key="w.id" :value="w.id">{{ w.name }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">到</label>
-            <select v-model="transferForm.to_wallet_id" class="w-full border rounded-lg px-3 py-2" required>
+            <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">到</label>
+            <select v-model="transferForm.to_wallet_id" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all" required>
               <option v-for="w in walletStore.wallets" :key="w.id" :value="w.id">{{ w.name }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">金额</label>
-            <input v-model.number="transferForm.amount" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" required />
+            <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">金额</label>
+            <input v-model.number="transferForm.amount" type="number" step="0.01" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all" required />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
-            <input v-model="transferForm.note" type="text" class="w-full border rounded-lg px-3 py-2" />
+            <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">备注</label>
+            <input v-model="transferForm.note" type="text" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all" />
           </div>
-          <div class="flex gap-3 pt-2">
-            <button type="button" @click="showTransferModal = false" class="flex-1 py-2 border rounded-lg">取消</button>
-            <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded-lg">转账</button>
+          <div class="flex gap-3 pt-3">
+            <button type="button" @click="showTransferModal = false" class="flex-1 py-3 border border-gray-200 rounded-full font-medium hover:bg-gray-100 transition-colors text-base">取消</button>
+            <button type="submit" class="flex-1 py-3 bg-gray-900 text-white rounded-full font-medium hover:opacity-85 transition-opacity text-base">转账</button>
           </div>
         </form>
       </div>

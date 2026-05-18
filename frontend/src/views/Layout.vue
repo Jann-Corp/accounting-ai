@@ -50,7 +50,7 @@ const currentPath = ref(route.path)
 let isFirstRoute = true
 
 // Keep currentPath in sync with route changes
-watch(() => route.path, (p) => { 
+watch(() => route.path, (p) => {
   currentPath.value = p
   // 如果用户进入 AI 记录页面，标记为已查看
   if (p === '/ai-records') {
@@ -65,15 +65,15 @@ watch(() => route.path, (p) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <div class="min-h-screen bg-gray-50">
     <!-- Mobile Header -->
-    <header class="sticky top-0 z-50 bg-white shadow-sm lg:hidden">
-      <div class="flex items-center justify-between p-4">
-        <button @click="showSidebar = !showSidebar" class="p-2 rounded-lg hover:bg-gray-100">
+    <header class="sticky top-0 z-50 bg-white border-b border-gray-100 lg:hidden">
+      <div class="flex items-center justify-between px-4 py-4">
+        <button @click="showSidebar = !showSidebar" class="p-3 rounded-full hover:bg-gray-100 transition-colors">
           <span class="text-xl">☰</span>
         </button>
-        <h1 class="font-bold text-indigo-600">💰 AI记账</h1>
-        <button @click="confirmLogout" class="p-2 rounded-lg hover:bg-gray-100">
+        <h1 class="text-xl font-medium text-gray-900" style="letter-spacing: -0.32px;">💰 AI记账</h1>
+        <button @click="confirmLogout" class="p-3 rounded-full hover:bg-gray-100 transition-colors">
           <span class="text-xl">🚪</span>
         </button>
       </div>
@@ -81,43 +81,41 @@ watch(() => route.path, (p) => {
 
     <!-- Sidebar -->
     <aside
-      :class="['fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform lg:translate-x-0 lg:static flex flex-col', showSidebar ? 'translate-x-0' : '-translate-x-full']"
+      :class="['fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-100 transform transition-transform lg:translate-x-0 lg:static flex flex-col', showSidebar ? 'translate-x-0' : '-translate-x-full']"
     >
-      <div class="p-6 border-b flex-shrink-0">
-        <h1 class="text-2xl font-bold text-indigo-600">💰 AI记账</h1>
-        <p class="text-sm text-gray-500 mt-1">{{ authStore.user?.username }}</p>
+      <div class="p-8 border-b border-gray-100 flex-shrink-0">
+        <h1 class="text-3xl font-medium text-gray-900" style="letter-spacing: -0.4px;">💰 AI记账</h1>
+        <p class="text-sm text-gray-500 mt-2" style="letter-spacing: 0.16px;">{{ authStore.user?.username }}</p>
       </div>
 
-      <nav class="p-4 space-y-1 flex-1 overflow-y-auto">
+      <nav class="p-6 space-y-2 flex-1 overflow-y-auto">
         <router-link
           v-for="item in navItems"
           :key="item.path"
           :to="item.path"
           @click="showSidebar = false"
-          :class="['flex items-center gap-3 px-4 py-3 rounded-lg transition', currentPath === item.path ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50']"
+          :class="['flex items-center gap-4 px-5 py-3 rounded-full transition', currentPath === item.path ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100']"
         >
           <span class="text-xl relative">
             {{ item.icon }}
-            <!-- 动态小红点 -->
             <span
               v-if="item.hasBadge && aiRecordStore.showBadge"
-              class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border-2 border-white"
+              class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full animate-pulse border-2 border-white"
             />
           </span>
-          <span class="flex-1">{{ item.label }}</span>
-          <!-- 数字提示 -->
+          <span class="flex-1 text-base font-medium" style="letter-spacing: 0.24px;">{{ item.label }}</span>
           <span
             v-if="item.hasBadge && aiRecordStore.pendingCount > 0"
-            class="text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full"
+            class="text-xs bg-red-500 text-white px-2.5 py-1 rounded-full font-medium"
           >
             {{ aiRecordStore.pendingCount }}
           </span>
         </router-link>
       </nav>
 
-      <div class="p-4 border-t bg-white flex-shrink-0">
-        <div class="text-sm text-gray-500 mb-2">总资产</div>
-        <div class="text-2xl font-bold text-green-600">
+      <div class="p-6 border-t border-gray-100 bg-gray-50 flex-shrink-0">
+        <div class="text-sm text-gray-500 font-medium mb-1" style="letter-spacing: 0.16px;">总资产</div>
+        <div class="text-3xl font-medium text-gray-900" style="letter-spacing: -0.32px;">
           ¥{{ walletStore.totalBalance.toFixed(2) }}
         </div>
       </div>
@@ -127,18 +125,18 @@ watch(() => route.path, (p) => {
     <div
       v-if="showSidebar"
       @click="showSidebar = false"
-      class="fixed inset-0 bg-black/50 z-40 lg:hidden"
+      class="fixed inset-0 bg-black/40 z-40 lg:hidden"
     />
 
     <!-- Main Content -->
-    <main class="flex-1 p-6 lg:p-8">
+    <main class="flex-1 p-6 sm:p-8 lg:p-10">
       <RouterView />
     </main>
 
     <!-- Floating Action Button -->
     <button
       @click="showRecordModal = true"
-      class="fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 flex items-center justify-center text-2xl lg:bottom-8 lg:right-8 z-30"
+      class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 w-16 h-16 bg-gray-900 text-white rounded-full shadow-lg hover:opacity-85 transition-opacity flex items-center justify-center text-2xl z-30"
     >
       ✏️
     </button>
