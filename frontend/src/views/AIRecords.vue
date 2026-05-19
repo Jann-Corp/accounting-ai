@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { aiApi } from '@/api'
 import { useAIRecordStore } from '@/stores/aiRecord'
+import { formatDate } from '@/utils/date'
 
 interface RecognizedRecord {
   amount: number
@@ -74,12 +75,6 @@ function statusClass(s: string) {
   return map[s] || ''
 }
 
-function formatDate(d: string) {
-  if (!d) return '-'
-  // 确保字符串被解析为 UTC 时间（追加 'Z'）
-  const utcDate = new Date(d + (d.includes('Z') || d.includes('+') || d.includes('-') && d.slice(-5).includes(':') ? '' : 'Z'))
-  return utcDate.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
-}
 
 function toggleExpand(id: number) {
   expandedId.value = expandedId.value === id ? null : id

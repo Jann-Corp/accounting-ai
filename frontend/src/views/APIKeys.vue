@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useApiKeyStore } from '@/stores/apikey'
 import type { ApiKeyCreate } from '@/types'
+import { formatDate } from '@/utils/date'
 
 const apiKeyStore = useApiKeyStore()
 
@@ -45,9 +46,7 @@ async function handleToggle(id: number, current: boolean) {
   await apiKeyStore.toggleApiKey(id, !current)
 }
 
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+)
 }
 
 function formatExpiry(dateStr: string | null) {
