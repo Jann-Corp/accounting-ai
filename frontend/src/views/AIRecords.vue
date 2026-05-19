@@ -433,7 +433,7 @@ onUnmounted(() => {
                   </div>
                   <div class="p-2 bg-white rounded-lg">
                     <p class="text-gray-400 text-xs">日期</p>
-                    <p class="font-medium">{{ rec.date || '-' }}</p>
+                    <p class="font-medium">{{ rec.date ? formatDate(rec.date) : '-' }}</p>
                   </div>
                   <div class="p-2 bg-white rounded-lg">
                     <p class="text-gray-400 text-xs">建议分类</p>
