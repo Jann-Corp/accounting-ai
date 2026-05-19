@@ -49,44 +49,44 @@ function toggleMode() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-indigo-600 mb-2">💰 AI记账</h1>
-        <p class="text-gray-500">{{ isLogin ? '登录您的账户' : '创建新账户' }}</p>
+  <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-8 sm:p-12 w-full max-w-md border border-gray-100">
+      <div class="text-center mb-10">
+        <h1 class="text-4xl font-medium text-gray-900 mb-3" style="letter-spacing: -0.4px;">💰 AI记账</h1>
+        <p class="text-gray-500 text-base" style="letter-spacing: 0.24px;">{{ isLogin ? '登录您的账户' : '创建新账户' }}</p>
       </div>
 
-      <form @submit.prevent="handleSubmit" class="space-y-4">
-        <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+      <form @submit.prevent="handleSubmit" class="space-y-5">
+        <div v-if="error" class="bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100">
           {{ error }}
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">用户名</label>
           <input
             v-model="form.username"
             type="text"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all"
             placeholder="请输入用户名"
           />
         </div>
 
         <div v-if="!isLogin">
-          <label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">邮箱</label>
           <input
             v-model="form.email"
             type="email"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all"
             placeholder="请输入邮箱"
           />
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">密码</label>
           <input
             v-model="form.password"
             type="password"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all"
             placeholder="请输入密码"
           />
         </div>
@@ -94,15 +94,15 @@ function toggleMode() {
         <button
           type="submit"
           :disabled="!formValid || authStore.loading"
-          class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          class="w-full bg-gray-900 text-white py-3.5 px-6 rounded-xl font-medium hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity text-base"
         >
           {{ authStore.loading ? '处理中...' : (isLogin ? '登录' : '注册') }}
         </button>
       </form>
 
-      <p class="text-center mt-6 text-sm text-gray-600">
+      <p class="text-center mt-8 text-sm text-gray-600" style="letter-spacing: 0.16px;">
         {{ isLogin ? '还没有账户？' : '已有账户？' }}
-        <button @click="toggleMode" class="text-indigo-600 font-medium hover:underline">
+        <button @click="toggleMode" class="text-blue-500 font-medium hover:underline" style="letter-spacing: 0.16px;">
           {{ isLogin ? '立即注册' : '去登录' }}
         </button>
       </p>

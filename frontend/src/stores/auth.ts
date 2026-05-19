@@ -13,6 +13,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await authApi.login(data)
       token.value = res.data.access_token
+      localStorage.setItem('token', res.data.access_token)
       await fetchUser(res.data.access_token)
     } finally {
       loading.value = false
