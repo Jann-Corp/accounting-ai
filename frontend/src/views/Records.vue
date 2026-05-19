@@ -17,6 +17,9 @@ const editingRecord = ref<any>(null)
 const filterType = ref<RecordType | ''>('')
 const filterStatus = ref<RecordStatus | ''>('')
 
+// iOS风格右滑删除状态
+const swipedRecords = ref<Set<number>>(new Set())
+
 const form = ref({
   wallet_id: 0,
   category_id: null as number | null,
@@ -87,6 +90,7 @@ async function handleSubmit() {
 async function handleDelete(id: number) {
   if (confirm('确定要删除这条记录吗？')) {
     await recordStore.deleteRecord(id)
+    swipedRecords.value.delete(id)
   }
 }
 
@@ -96,6 +100,40 @@ function formatCurrency(amount: number) {
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('zh-CN')
+}
+
+// iOS风格右滑删除
+let touchStartX = 0
+let currentTouchId = 0
+
+function handleTouchStart(event: TouchEvent, recordId: number) {
+  touchStartX = event.touches[0].clientX
+  currentTouchId = recordId
+}
+
+function handleTouchMove(event: TouchEvent, recordId: number) {
+  const touchX = event.touches[0].clientX
+  const deltaX = touchX - touchStartX
+
+  if (deltaX < -50) {
+    // 向左滑动，显示删除按钮
+    swipedRecords.value.add(recordId)
+  } else if (deltaX > 50) {
+    // 向右滑动，隐藏删除按钮
+    swipedRecords.value.delete(recordId)
+  }
+}
+
+function handleTouchEnd(event: TouchEvent, recordId: number) {
+  // 触摸结束时保持状态
+  currentTouchId = 0
+}
+
+function resetSwipe(recordId: number) {
+  // 点击其他区域时隐藏删除按钮
+  if (currentTouchId !== recordId) {
+    swipedRecords.value.delete(recordId)
+  }
 }
 </script>
 
@@ -134,36 +172,51 @@ function formatDate(dateStr: string) {
         <div
           v-for="record in filteredRecords"
           :key="record.id"
-          class="p-6 hover:bg-gray-50 flex items-center justify-between transition-colors"
+          class="relative group"
+          @click="resetSwipe(record.id)"
         >
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-2xl">
-              {{ record.category_icon || '📦' }}
+          <!-- 可滑动区域 -->
+          <div
+            class="p-6 hover:bg-gray-50 flex items-center justify-between transition-colors touch-pan-x"
+            @touchstart="handleTouchStart($event, record.id)"
+            @touchmove="handleTouchMove($event, record.id)"
+            @touchend="handleTouchEnd($event, record.id)"
+          >
+            <div class="flex items-center gap-4">
+              <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-2xl">
+                {{ record.category_icon || '📦' }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-gray-900 text-sm truncate">{{ record.note || record.category_name || '未分类' }}</p>
+                <p class="text-xs text-gray-500 mt-1 truncate">
+                  {{ record.wallet_name }} · {{ formatDate(record.date) }}
+                  <span v-if="record.status === 'pending'" class="text-gray-400 ml-1">· 待确认</span>
+                </p>
+              </div>
             </div>
-            <div>
-              <p class="font-semibold text-gray-900 text-sm">{{ record.note || record.category_name || '未分类' }}</p>
-              <p class="text-xs text-gray-500 mt-1">
-                {{ record.wallet_name }} · {{ formatDate(record.date) }}
-                <span v-if="record.status === 'pending'" class="text-gray-400 ml-1">· 待确认</span>
-              </p>
+            <div class="flex items-center gap-4 flex-shrink-0">
+              <span :class="['font-semibold text-lg whitespace-nowrap', record.record_type === 'expense' ? 'text-red-500' : 'text-emerald-600']">
+                {{ record.record_type === 'expense' ? '-' : '+' }}{{ formatCurrency(record.amount) }}
+              </span>
+              <div class="flex gap-1">
+                <button @click.stop="openEditModal(record)" class="p-2 text-gray-400 hover:text-gray-900 transition-colors">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
-          <div class="flex items-center gap-4">
-            <span :class="['font-semibold text-lg', record.record_type === 'expense' ? 'text-red-500' : 'text-emerald-600']">
-              {{ record.record_type === 'expense' ? '-' : '+' }}{{ formatCurrency(record.amount) }}
-            </span>
-            <div class="flex gap-1">
-              <button @click="openEditModal(record)" class="p-2 text-gray-400 hover:text-gray-900 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
-              <button @click="handleDelete(record.id)" class="p-2 text-gray-400 hover:text-red-500 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </div>
+
+          <!-- 右滑显示的删除按钮 (iOS风格) -->
+          <div
+            class="absolute right-0 top-0 bottom-0 w-20 bg-red-500 flex items-center justify-center text-white transition-transform duration-300 ease-in-out"
+            :class="swipedRecords.has(record.id) ? 'translate-x-0' : 'translate-x-full'"
+            @click.stop="handleDelete(record.id)"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
           </div>
         </div>
       </div>
