@@ -75,8 +75,6 @@ function statusClass(s: string) {
   return map[s] || ''
 }
 
-)
-}
 
 function toggleExpand(id: number) {
   expandedId.value = expandedId.value === id ? null : id
