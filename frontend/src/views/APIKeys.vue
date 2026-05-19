@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useApiKeyStore } from '@/stores/apikey'
 import type { ApiKeyCreate } from '@/types'
 import { formatDate } from '@/utils/date'
@@ -17,6 +17,23 @@ const creating = ref(false)
 
 onMounted(() => {
   apiKeyStore.fetchApiKeys()
+})
+
+// 禁止/恢复背景滚动
+watch(showModal, (val) => {
+  if (val) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+})
+
+watch(showKeyModal, (val) => {
+  if (val) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
 })
 
 async function handleCreate() {

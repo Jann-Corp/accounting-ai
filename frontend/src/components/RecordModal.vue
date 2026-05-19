@@ -56,6 +56,9 @@ const filteredCategories = computed(() => {
 // Reset when modal opens
 watch(() => props.show, async (val) => {
   if (val) {
+    // 禁止背景滚动
+    document.body.style.overflow = 'hidden'
+    
     resetState()
     await Promise.all([
       walletStore.fetchWallets(),
@@ -67,6 +70,9 @@ watch(() => props.show, async (val) => {
     }
     // Set default date to now
     manualForm.value.date = toLocalDatetimeStr(new Date())
+  } else {
+    // 恢复背景滚动
+    document.body.style.overflow = ''
   }
 })
 
