@@ -76,7 +76,18 @@ function statusClass(s: string) {
 
 function formatDate(d: string) {
   if (!d) return '-'
-  return new Date(d).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+  const date = new Date(d)
+  const options: Intl.DateTimeFormatOptions = {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }
+  return date.toLocaleString('zh-CN', options)
 }
 
 function toggleExpand(id: number) {
