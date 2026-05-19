@@ -76,7 +76,9 @@ function statusClass(s: string) {
 
 function formatDate(d: string) {
   if (!d) return '-'
-  return new Date(d).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+  // 确保字符串被解析为 UTC 时间（追加 'Z'）
+  const utcDate = new Date(d + (d.includes('Z') || d.includes('+') || d.includes('-') && d.slice(-5).includes(':') ? '' : 'Z'))
+  return utcDate.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
 }
 
 function toggleExpand(id: number) {
