@@ -6,6 +6,7 @@ import { useCategoryStore } from '@/stores/category'
 import { RecordType } from '@/types'
 import type { RecordStatus } from '@/types'
 import RecordModal from '@/components/RecordModal.vue'
+import { formatDateOnly } from '@/utils/date'
 
 const recordStore = useRecordStore()
 const walletStore = useWalletStore()
@@ -96,10 +97,6 @@ async function handleDelete(id: number) {
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(amount)
-}
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('zh-CN')
 }
 
 // iOS风格右滑删除（修复垂直滚动问题）

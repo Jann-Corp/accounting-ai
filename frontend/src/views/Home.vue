@@ -9,6 +9,7 @@ import { useAIRecordStore } from '@/stores/aiRecord'
 import { statsApi } from '@/api'
 import type { MonthlyStats, CategoryBreakdown } from '@/types'
 import RecordModal from '@/components/RecordModal.vue'
+import { formatDateOnly } from '@/utils/date'
 
 const router = useRouter()
 const walletStore = useWalletStore()
@@ -52,8 +53,7 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(amount)
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' })
+)
 }
 </script>
 
