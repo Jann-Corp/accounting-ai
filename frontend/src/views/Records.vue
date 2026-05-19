@@ -102,31 +102,48 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('zh-CN')
 }
 
-// iOS风格右滑删除
+// iOS风格右滑删除（修复垂直滚动问题）
 let touchStartX = 0
+let touchStartY = 0
 let currentTouchId = 0
+let isHorizontalSwipe = false
 
 function handleTouchStart(event: TouchEvent, recordId: number) {
   touchStartX = event.touches[0].clientX
+  touchStartY = event.touches[0].clientY
   currentTouchId = recordId
+  isHorizontalSwipe = false
 }
 
 function handleTouchMove(event: TouchEvent, recordId: number) {
   const touchX = event.touches[0].clientX
+  const touchY = event.touches[0].clientY
   const deltaX = touchX - touchStartX
+  const deltaY = touchY - touchStartY
 
-  if (deltaX < -50) {
-    // 向左滑动，显示删除按钮
-    swipedRecords.value.add(recordId)
-  } else if (deltaX > 50) {
-    // 向右滑动，隐藏删除按钮
-    swipedRecords.value.delete(recordId)
+  // 判断是否为水平滑动（水平移动距离大于垂直移动距离）
+  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+    isHorizontalSwipe = true
+    // 阻止默认行为以启用右滑删除
+    event.preventDefault()
+
+    if (deltaX < -50) {
+      // 向左滑动，显示删除按钮
+      swipedRecords.value.add(recordId)
+    } else if (deltaX > 50) {
+      // 向右滑动，隐藏删除按钮
+      swipedRecords.value.delete(recordId)
+    }
+  } else if (Math.abs(deltaY) > 10) {
+    // 垂直滑动，允许默认滚动行为
+    isHorizontalSwipe = false
   }
 }
 
 function handleTouchEnd(event: TouchEvent, recordId: number) {
   // 触摸结束时保持状态
   currentTouchId = 0
+  isHorizontalSwipe = false
 }
 
 function resetSwipe(recordId: number) {
@@ -177,12 +194,12 @@ function resetSwipe(recordId: number) {
         >
           <!-- 可滑动区域 -->
           <div
-            class="p-6 hover:bg-gray-50 flex items-center justify-between transition-colors touch-pan-x"
+            class="p-6 hover:bg-gray-50 flex items-center justify-between transition-colors"
             @touchstart="handleTouchStart($event, record.id)"
             @touchmove="handleTouchMove($event, record.id)"
             @touchend="handleTouchEnd($event, record.id)"
           >
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 flex-1 min-w-0">
               <div class="flex-shrink-0 w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-2xl">
                 {{ record.category_icon || '📦' }}
               </div>
@@ -194,7 +211,7 @@ function resetSwipe(recordId: number) {
                 </p>
               </div>
             </div>
-            <div class="flex items-center gap-4 flex-shrink-0">
+            <div class="flex items-center gap-4 flex-shrink-0 ml-3">
               <span :class="['font-semibold text-lg whitespace-nowrap', record.record_type === 'expense' ? 'text-red-500' : 'text-emerald-600']">
                 {{ record.record_type === 'expense' ? '-' : '+' }}{{ formatCurrency(record.amount) }}
               </span>
