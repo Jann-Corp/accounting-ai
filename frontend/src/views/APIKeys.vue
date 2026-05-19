@@ -47,7 +47,9 @@ async function handleToggle(id: number, current: boolean) {
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+  // 确保字符串被解析为 UTC 时间（追加 'Z'）
+  const utcDate = new Date(dateStr + (dateStr.includes('Z') || dateStr.includes('+') || (dateStr.includes('-') && dateStr.slice(-5).includes(':')) ? '' : 'Z'))
+  return utcDate.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
 }
 
 function formatExpiry(dateStr: string | null) {
