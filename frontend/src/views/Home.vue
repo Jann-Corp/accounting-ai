@@ -53,8 +53,6 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(amount)
 }
 
-)
-}
 </script>
 
 <template>
@@ -212,7 +210,7 @@ function formatCurrency(amount: number) {
               <span class="text-2xl">{{ record.category_icon || '📦' }}</span>
               <div>
                 <p class="text-base font-medium text-gray-900" style="letter-spacing: 0.24px;">{{ record.note || record.category_name }}</p>
-                <p class="text-xs text-gray-500 mt-1" style="letter-spacing: 0.16px;">{{ formatDate(record.date) }}</p>
+                <p class="text-xs text-gray-500 mt-1" style="letter-spacing: 0.16px;">{{ formatDateOnly(record.date) }}</p>
               </div>
             </div>
             <span :class="['text-xl font-medium', record.record_type === 'expense' ? 'text-red-500' : 'text-emerald-600']" style="letter-spacing: -0.32px;">

@@ -203,7 +203,7 @@ function resetSwipe(recordId: number) {
               <div class="flex-1 min-w-0">
                 <p class="font-semibold text-gray-900 text-sm truncate">{{ record.note || record.category_name || '未分类' }}</p>
                 <p class="text-xs text-gray-500 mt-1 truncate">
-                  {{ record.wallet_name }} · {{ formatDate(record.date) }}
+                  {{ record.wallet_name }} · {{ formatDateOnly(record.date) }}
                   <span v-if="record.status === 'pending'" class="text-gray-400 ml-1">· 待确认</span>
                 </p>
               </div>

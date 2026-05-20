@@ -63,8 +63,6 @@ async function handleToggle(id: number, current: boolean) {
   await apiKeyStore.toggleApiKey(id, !current)
 }
 
-)
-}
 
 function formatExpiry(dateStr: string | null) {
   if (!dateStr) return '永不过期'
