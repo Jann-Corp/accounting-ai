@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRecordStore } from '@/stores/record'
 import { useWalletStore } from '@/stores/wallet'
 import { useCategoryStore } from '@/stores/category'
@@ -17,6 +17,17 @@ const showRecordModal = ref(false)
 const editingRecord = ref<any>(null)
 const filterType = ref<RecordType | ''>('')
 const filterStatus = ref<RecordStatus | ''>('')
+
+// 监听弹窗状态，阻止背景滚动
+watch(showModal, (val) => {
+  if (val) {
+    // 禁止背景滚动
+    document.body.style.overflow = 'hidden'
+  } else {
+    // 恢复背景滚动
+    document.body.style.overflow = ''
+  }
+})
 
 // iOS风格右滑删除状态
 const swipedRecords = ref<Set<number>>(new Set())
@@ -238,9 +249,9 @@ function resetSwipe(recordId: number) {
 
     <!-- Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div class="border border-gray-100 bg-white rounded-2xl p-8 w-full max-w-md">
-        <h2 class="text-2xl font-semibold text-gray-900 mb-6 tracking-tight">{{ editingRecord ? '编辑记录' : '添加记录' }}</h2>
-        <form @submit.prevent="handleSubmit" class="space-y-5">
+      <div class="border border-gray-100 bg-white rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-6 tracking-tight flex-shrink-0">{{ editingRecord ? '编辑记录' : '添加记录' }}</h2>
+        <form @submit.prevent="handleSubmit" class="space-y-5 flex-1 overflow-y-auto pr-1">
           <div>
             <label class="block text-sm font-medium text-gray-900 mb-2">类型</label>
             <select v-model="form.record_type" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-600">
@@ -275,7 +286,7 @@ function resetSwipe(recordId: number) {
             <label class="block text-sm font-medium text-gray-900 mb-2">日期</label>
             <input v-model="form.date" type="datetime-local" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-900" required />
           </div>
-          <div class="flex gap-3 pt-2">
+          <div class="flex gap-3 pt-2 flex-shrink-0">
             <button type="button" @click="showModal = false" class="flex-1 py-3 border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition-colors">取消</button>
             <button type="submit" class="flex-1 py-3 bg-gray-900 text-white rounded-full hover:opacity-85 transition-opacity">保存</button>
           </div>
