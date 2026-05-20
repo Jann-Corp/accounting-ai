@@ -177,7 +177,7 @@ function formatCurrency(amount: number) {
     </div>
 
     <!-- Add/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div v-if="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
       <div class="bg-white rounded-2xl p-8 w-full max-w-md border border-gray-100 max-h-[90vh] overflow-hidden flex flex-col">
         <h2 class="text-2xl font-medium text-gray-900 mb-6 flex-shrink-0" style="letter-spacing: -0.32px;">{{ editingWallet ? '编辑账户' : '添加账户' }}</h2>
         <form @submit.prevent="handleSubmit" class="space-y-5 flex-1 overflow-y-auto pr-1">
@@ -204,7 +204,7 @@ function formatCurrency(amount: number) {
     </div>
 
     <!-- Transfer Modal -->
-    <div v-if="showTransferModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div v-if="showTransferModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
       <div class="bg-white rounded-2xl p-8 w-full max-w-md border border-gray-100 max-h-[90vh] overflow-hidden flex flex-col">
         <h2 class="text-2xl font-medium text-gray-900 mb-6 flex-shrink-0" style="letter-spacing: -0.32px;">💸 转账</h2>
         <form @submit.prevent="handleTransfer" class="space-y-5 flex-1 overflow-y-auto pr-1">
