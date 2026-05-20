@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useWalletStore } from '@/stores/wallet'
 import { walletApi } from '@/api'
 import { WalletType } from '@/types'
@@ -11,6 +11,28 @@ const showModal = ref(false)
 const showTransferModal = ref(false)
 const editingWallet = ref<WalletCreate | null>(null)
 const submitting = ref(false)
+
+// 监听弹窗状态，阻止背景滚动
+watch(showModal, (val) => {
+  if (val) {
+    // 禁止背景滚动
+    document.body.style.overflow = 'hidden'
+  } else {
+    // 恢复背景滚动
+    document.body.style.overflow = ''
+  }
+})
+
+// 监听转账弹窗状态，阻止背景滚动
+watch(showTransferModal, (val) => {
+  if (val) {
+    // 禁止背景滚动
+    document.body.style.overflow = 'hidden'
+  } else {
+    // 恢复背景滚动
+    document.body.style.overflow = ''
+  }
+})
 
 const form = ref<WalletCreate>({
   name: '',
@@ -155,10 +177,10 @@ function formatCurrency(amount: number) {
     </div>
 
     <!-- Add/Edit Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-8 w-full max-w-md border border-gray-100">
-        <h2 class="text-2xl font-medium text-gray-900 mb-6" style="letter-spacing: -0.32px;">{{ editingWallet ? '编辑账户' : '添加账户' }}</h2>
-        <form @submit.prevent="handleSubmit" class="space-y-5">
+    <div v-if="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl p-8 w-full max-w-md border border-gray-100 max-h-[90vh] overflow-hidden flex flex-col">
+        <h2 class="text-2xl font-medium text-gray-900 mb-6 flex-shrink-0" style="letter-spacing: -0.32px;">{{ editingWallet ? '编辑账户' : '添加账户' }}</h2>
+        <form @submit.prevent="handleSubmit" class="space-y-5 flex-1 overflow-y-auto pr-1">
           <div>
             <label for="wallet-name" class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">账户名称</label>
             <input id="wallet-name" v-model="form.name" type="text" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all" required />
@@ -173,7 +195,7 @@ function formatCurrency(amount: number) {
             <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">初始余额</label>
             <input v-model.number="form.balance" type="number" step="0.01" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all" />
           </div>
-          <div class="flex gap-3 pt-3">
+          <div class="flex gap-3 pt-3 flex-shrink-0">
             <button type="button" @click="showModal = false" class="flex-1 py-3 border border-gray-200 rounded-full font-medium hover:bg-gray-100 transition-colors text-base">取消</button>
             <button type="submit" :disabled="submitting" class="flex-1 py-3 bg-gray-900 text-white rounded-full font-medium hover:opacity-85 transition-opacity disabled:opacity-50 text-base">{{ submitting ? '保存中...' : '保存' }}</button>
           </div>
@@ -182,10 +204,10 @@ function formatCurrency(amount: number) {
     </div>
 
     <!-- Transfer Modal -->
-    <div v-if="showTransferModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-8 w-full max-w-md border border-gray-100">
-        <h2 class="text-2xl font-medium text-gray-900 mb-6" style="letter-spacing: -0.32px;">💸 转账</h2>
-        <form @submit.prevent="handleTransfer" class="space-y-5">
+    <div v-if="showTransferModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl p-8 w-full max-w-md border border-gray-100 max-h-[90vh] overflow-hidden flex flex-col">
+        <h2 class="text-2xl font-medium text-gray-900 mb-6 flex-shrink-0" style="letter-spacing: -0.32px;">💸 转账</h2>
+        <form @submit.prevent="handleTransfer" class="space-y-5 flex-1 overflow-y-auto pr-1">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">从</label>
             <select v-model="transferForm.from_wallet_id" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all" required>
@@ -206,7 +228,7 @@ function formatCurrency(amount: number) {
             <label class="block text-sm font-medium text-gray-700 mb-2" style="letter-spacing: 0.16px;">备注</label>
             <input v-model="transferForm.note" type="text" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent transition-all" />
           </div>
-          <div class="flex gap-3 pt-3">
+          <div class="flex gap-3 pt-3 flex-shrink-0">
             <button type="button" @click="showTransferModal = false" class="flex-1 py-3 border border-gray-200 rounded-full font-medium hover:bg-gray-100 transition-colors text-base">取消</button>
             <button type="submit" class="flex-1 py-3 bg-gray-900 text-white rounded-full font-medium hover:opacity-85 transition-opacity text-base">转账</button>
           </div>
