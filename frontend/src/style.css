@@ -94,6 +94,75 @@ body {
 }
 
 /* ============================================
+   响应式模态框优化 - 修复 iPhone 12 Pro 等小屏幕上的滚动问题
+   ============================================ */
+.mobile-modal-container {
+  @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+  background: rgba(15, 14, 12, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.mobile-modal {
+  @apply relative bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col;
+  /* 响应式高度控制 */
+  max-height: calc(100vh - 2rem); /* 减去 padding */
+  min-height: auto;
+  overflow: hidden;
+}
+
+/* 在极小的屏幕上进一步优化 */
+@media (max-height: 700px) {
+  .mobile-modal {
+    max-height: calc(100vh - 1rem);
+  }
+}
+
+/* 在 iPhone 12 Pro (390px) 及更小屏幕上优化 */
+@media (max-width: 420px) {
+  .mobile-modal {
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+    max-width: calc(100vw - 1rem);
+  }
+}
+
+/* 模态框头部固定 */
+.mobile-modal-header {
+  @apply flex items-center justify-between p-4 border-b;
+  flex-shrink: 0;
+  background: var(--bg-card);
+}
+
+/* 模态框内容区域可滚动 */
+.mobile-modal-content {
+  @apply flex-1 overflow-y-auto p-4;
+  /* 改进滚动体验 */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* 防止内容过长时溢出 */
+.mobile-modal-content > * {
+  max-width: 100%;
+}
+
+/* 修复输入框在iOS上的显示 */
+@supports (-webkit-touch-callout: none) {
+  .mobile-modal-content input,
+  .mobile-modal-content select,
+  .mobile-modal-content textarea {
+    font-size: 16px; /* 防止iOS自动缩放 */
+  }
+}
+
+/* 确保模态框内的按钮在底部可见 */
+.mobile-modal-footer {
+  @apply p-4 border-t;
+  flex-shrink: 0;
+  background: var(--bg-card);
+}
+
+/* ============================================
    暗金主题卡片
    ============================================ */
 .card-gold {

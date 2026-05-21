@@ -158,13 +158,10 @@ function formatExpiry(dateStr: string | null) {
     <!-- Create Modal -->
     <div
       v-if="showModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay"
+      class="mobile-modal-container"
       @click.self="showModal = false"
     >
-      <div
-        class="rounded-2xl p-6 w-full max-w-md"
-        style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);"
-      >
+      <div class="mobile-modal">
         <h2 class="text-xl font-bold mb-6" style="color: var(--text-primary);">新建 API Key</h2>
         <form @submit.prevent="handleCreate" class="space-y-4">
           <div>
@@ -198,15 +195,12 @@ function formatExpiry(dateStr: string | null) {
       </div>
     </div>
 
-    <!-- Show Key Once Modal -->
+<!-- Key Display Modal -->
     <div
       v-if="showKeyModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay"
+      class="mobile-modal-container"
     >
-      <div
-        class="rounded-2xl p-6 w-full max-w-md"
-        style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);"
-      >
+      <div class="mobile-modal">
         <div class="text-center mb-4">
           <div class="text-5xl mb-3">🔑</div>
           <h2 class="text-xl font-bold" style="color: var(--text-primary);">API Key 已创建</h2>

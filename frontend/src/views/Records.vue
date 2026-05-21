@@ -187,13 +187,10 @@ function formatDate(dateStr: string) {
     <!-- Modal -->
     <div
       v-if="showModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay"
+      class="mobile-modal-container"
       @click.self="showModal = false"
     >
-      <div
-        class="rounded-2xl p-6 w-full max-w-md"
-        style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);"
-      >
+      <div class="mobile-modal">
         <h2 class="text-xl font-bold mb-6" style="color: var(--text-primary);">
           {{ editingRecord ? '✏️ 编辑记录' : '➕ 添加记录' }}
         </h2>
