@@ -247,8 +247,7 @@ function resetSwipe(recordId: number) {
       </div>
     </div>
 
-    <!-- Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+    <div v-if="showModal" @click.self="showModal = false" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
       <div class="border border-gray-100 bg-white rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
         <h2 class="text-2xl font-semibold text-gray-900 mb-6 tracking-tight flex-shrink-0">{{ editingRecord ? '编辑记录' : '添加记录' }}</h2>
         <form @submit.prevent="handleSubmit" class="space-y-5 flex-1 overflow-y-auto pr-1">
