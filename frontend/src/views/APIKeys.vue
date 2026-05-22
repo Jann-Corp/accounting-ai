@@ -200,7 +200,7 @@ function formatExpiry(dateStr: string | null) {
     </div>
 
     <!-- Show Key Once Modal -->
-    <div v-if="showKeyModal" class="mobile-modal-container">
+    <div v-if="showKeyModal" class="mobile-modal-container" @click.self="showKeyModal = false">
       <div class="mobile-modal">
         <div class="mobile-modal-header">
           <div class="flex items-center gap-2">
@@ -217,11 +217,11 @@ function formatExpiry(dateStr: string | null) {
           <div class="bg-gray-100 rounded-lg p-3 font-mono text-sm break-all text-gray-800 mb-4">
             {{ newKey }}
           </div>
-        <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-700 flex-shrink-0">
-          <p class="font-medium mb-1">⚠️ 重要提醒</p>
-          <p>此 Key 只会显示一次，关闭弹窗后将无法再次查看。</p>
-          <p>请立即复制并妥善保存到安全的地方。</p>
-        </div>
+          <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-700">
+            <p class="font-medium mb-1">⚠️ 重要提醒</p>
+            <p>此 Key 只会显示一次，关闭弹窗后将无法再次查看。</p>
+            <p>请立即复制并妥善保存到安全的地方。</p>
+          </div>
         </div>
         
         <div class="mobile-modal-footer">

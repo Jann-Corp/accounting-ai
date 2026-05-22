@@ -247,7 +247,6 @@ function resetSwipe(recordId: number) {
       </div>
     </div>
 
-<!-- Modal -->
     <div v-if="showModal" class="mobile-modal-container" @click.self="showModal = false">
       <div class="mobile-modal">
         <div class="mobile-modal-header">
