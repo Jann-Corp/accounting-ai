@@ -151,11 +151,16 @@ async function handleDelete(id: number) {
       还没有分类
     </div>
 
-    <!-- Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div class="border border-gray-100 bg-white rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
-        <h2 class="text-2xl font-semibold text-gray-900 mb-6 tracking-tight flex-shrink-0">{{ editingCategory ? '编辑分类' : '添加分类' }}</h2>
-        <form @submit.prevent="handleSubmit" class="space-y-5 flex-1 overflow-y-auto pr-1">
+    <div v-if="showModal" class="mobile-modal-container" @click.self="showModal = false">
+      <div class="mobile-modal">
+        <div class="mobile-modal-header">
+          <h2 class="text-2xl font-semibold text-gray-900 tracking-tight">{{ editingCategory ? '编辑分类' : '添加分类' }}</h2>
+          <button @click="showModal = false" class="p-2 hover:bg-gray-100 rounded-lg">
+            <span class="text-xl">✕</span>
+          </button>
+        </div>
+        
+        <div class="mobile-modal-content">
           <div>
             <label class="block text-sm font-medium text-gray-900 mb-2">分类名称</label>
             <input v-model="form.name" type="text" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-900" required />
@@ -181,11 +186,14 @@ async function handleDelete(id: number) {
               </button>
             </div>
           </div>
-          <div class="flex gap-3 pt-2 flex-shrink-0">
+        </div>
+        
+        <div class="mobile-modal-footer">
+          <div class="flex gap-3">
             <button type="button" @click="showModal = false" class="flex-1 py-3 border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition-colors">取消</button>
             <button type="submit" class="flex-1 py-3 bg-gray-900 text-white rounded-full hover:opacity-85 transition-opacity">保存</button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   </div>

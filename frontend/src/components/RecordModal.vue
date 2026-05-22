@@ -224,12 +224,9 @@ function handleClose() {
 
 <template>
   <Teleport to="body">
-    <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center">
-      <!-- Backdrop -->
-      <div class="absolute inset-0 bg-black/50" @click="handleClose" />
-
+    <div v-if="show" class="mobile-modal-container" @click.self="handleClose">
       <!-- Modal -->
-      <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="mobile-modal">
         <!-- Header -->
         <div class="flex items-center justify-between p-4 border-b">
           <h2 class="text-lg font-semibold text-gray-800">记一笔</h2>
@@ -255,7 +252,7 @@ function handleClose() {
         </div>
 
         <!-- Content -->
-        <div class="flex-1 overflow-y-auto p-4">
+        <div class="mobile-modal-content">
           <!-- AI Tab -->
           <div v-if="activeTab === 'ai'" class="space-y-4">
             <!-- Upload Success Modal -->
