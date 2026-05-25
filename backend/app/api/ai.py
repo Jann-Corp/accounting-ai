@@ -20,6 +20,22 @@ from app.core.logging import logger
 router = APIRouter(prefix="/ai", tags=["AI 识别"])
 
 
+def _file_path_to_url(file_path: str) -> str:
+    """Convert absolute file path to URL path for static file serving.
+    
+    Args:
+        file_path: Absolute file path (e.g., /tmp/accounting-uploads/1/xxx.jpg)
+    
+    Returns:
+        URL path (e.g., /uploads/1/xxx.jpg)
+    """
+    # Remove the UPLOAD_DIR prefix and add /uploads prefix
+    if file_path.startswith(settings.UPLOAD_DIR):
+        relative_path = file_path[len(settings.UPLOAD_DIR):].lstrip('/')
+        return f"/uploads/{relative_path}"
+    return file_path
+
+
 def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
     """Background task: call AI service and persist result to DB job record.
     
@@ -73,7 +89,7 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
                 }
                 for r in ai_results
             ],
-            "original_image_url": file_path,
+            "original_image_url": _file_path_to_url(file_path),
         }
 
         # Auto-create Record entries based on confidence
@@ -164,7 +180,7 @@ def _run_recognition_sync(job_id: int, file_path: str, image_base64: str):
                 note=r.get("merchant_name"),
                 date=record_date,
                 category_id=category_id,
-                original_image_url=file_path,
+                original_image_url=_file_path_to_url(file_path),
                 ai_confidence=confidence,
                 is_ai_recognized=1,
                 job_id=job.id,
@@ -287,7 +303,7 @@ async def recognize_receipt(
     # Create immutable job record
     job = AIRecognitionJob(
         user_id=current_user.id,
-        original_image_url=file_path,
+        original_image_url=_file_path_to_url(file_path),
         status=RecognitionStatus.PENDING,
     )
     db.add(job)

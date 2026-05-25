@@ -5,3 +5,83 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
+
+/* ====================
+   Mobile Modal Responsiveness
+   ==================== */
+
+.mobile-modal-container {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 14, 12, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.mobile-modal {
+  position: relative;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  max-width: 28rem;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 2rem);
+  min-height: auto;
+  overflow: hidden;
+}
+
+.mobile-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  background: white;
+}
+
+.mobile-modal-content {
+  flex: 1 1 0%;
+  overflow-y: auto;
+  padding: 1rem;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.mobile-modal-footer {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  background: white;
+}
+
+/* Responsive optimizations for small screens */
+@media (max-height: 700px) {
+  .mobile-modal {
+    max-height: calc(100vh - 1rem);
+  }
+}
+
+@media (max-width: 420px) {
+  .mobile-modal-container {
+    padding: 0.5rem;
+  }
+  
+  .mobile-modal {
+    max-width: 100%;
+    margin: 0;
+  }
+}
+
+/* iOS-specific optimizations */
+@supports (-webkit-touch-callout: none) {
+  .mobile-modal-content {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+}

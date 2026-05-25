@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
 import { aiApi } from '@/api'
 import { useAIRecordStore } from '@/stores/aiRecord'
 import { formatDate } from '@/utils/date'
@@ -42,8 +42,8 @@ let sentinelObserver: IntersectionObserver | null = null
 
 const aiRecordStore = useAIRecordStore()
 
-// 使用 store 中的 pending records
-const pendingRecords = aiRecordStore.pendingRecords
+// 使用 computed 确保 pendingRecords 是响应式的
+const pendingRecords = computed(() => aiRecordStore.pendingRecords)
 
 function parseResult(job: Job): RecognizedRecord[] {
   if (!job.result_json) return []
@@ -336,7 +336,7 @@ onUnmounted(() => {
             <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
               <img
                 v-if="job.original_image_url"
-                :src="'http://localhost:8000' + job.original_image_url"
+                :src="job.original_image_url"
                 class="w-full h-full object-cover"
                 @error="(e) => (e.target as any).style.display = 'none'"
               />

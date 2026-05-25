@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import os
 import traceback
 
@@ -76,6 +77,15 @@ app.include_router(records.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
 app.include_router(stats.router, prefix="/api/v1")
 app.include_router(apikeys.router, prefix="/api/v1")
+
+# Mount static files for uploaded images
+# Create upload directory if it doesn't exist
+upload_dir = settings.UPLOAD_DIR
+if not os.path.exists(upload_dir):
+    os.makedirs(upload_dir, exist_ok=True)
+
+# Mount the upload directory to serve static files
+app.mount("/uploads", StaticFiles(directory=upload_dir), name="uploads")
 
 
 @app.get("/health")
