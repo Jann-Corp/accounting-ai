@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { statsApi } from '@/api'
+import { useToastStore } from '@/stores/toast'
 import type { MonthlyStats, CategoryBreakdown, TrendPoint } from '@/types'
 
 const currentDate = new Date()
@@ -8,6 +9,8 @@ const selectedYear = ref(currentDate.getFullYear())
 const selectedMonth = ref(currentDate.getMonth() + 1)
 
 const monthlyStats = ref<MonthlyStats | null>(null)
+
+const toastStore = useToastStore()
 const categoryBreakdown = ref<CategoryBreakdown[]>([])
 const trendData = ref<TrendPoint[]>([])
 
@@ -29,7 +32,7 @@ async function loadData() {
     categoryBreakdown.value = breakdownRes.data.breakdown
     trendData.value = trendRes.data.trend
   } catch (e) {
-    console.error('Failed to load stats', e)
+    toastStore.error('加载统计数据失败')
   } finally {
     loading.value = false
   }
