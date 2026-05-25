@@ -247,12 +247,6 @@ function resetSwipe(recordId: number) {
       </div>
     </div>
 
-<<<<<<< HEAD
-    <div v-if="showModal" @click.self="showModal = false" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div class="border border-gray-100 bg-white rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
-        <h2 class="text-2xl font-semibold text-gray-900 mb-6 tracking-tight flex-shrink-0">{{ editingRecord ? '编辑记录' : '添加记录' }}</h2>
-        <form @submit.prevent="handleSubmit" class="space-y-5 flex-1 overflow-y-auto pr-1">
-=======
     <div v-if="showModal" class="mobile-modal-container" @click.self="showModal = false">
       <div class="mobile-modal">
         <div class="mobile-modal-header">
@@ -263,7 +257,7 @@ function resetSwipe(recordId: number) {
         </div>
         
         <div class="mobile-modal-content">
->>>>>>> origin/master
+          <form @submit.prevent="handleSubmit" class="space-y-5">
           <div>
             <label class="block text-sm font-medium text-gray-900 mb-2">类型</label>
             <select v-model="form.record_type" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-600">
