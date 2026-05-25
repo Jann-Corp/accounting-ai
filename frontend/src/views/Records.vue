@@ -3,6 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRecordStore } from '@/stores/record'
 import { useWalletStore } from '@/stores/wallet'
 import { useCategoryStore } from '@/stores/category'
+import { useToastStore } from '@/stores/toast'
 import { RecordType } from '@/types'
 import type { RecordStatus } from '@/types'
 import { formatDateOnly } from '@/utils/date'
@@ -10,6 +11,7 @@ import { formatDateOnly } from '@/utils/date'
 const recordStore = useRecordStore()
 const walletStore = useWalletStore()
 const categoryStore = useCategoryStore()
+const toastStore = useToastStore()
 
 const showModal = ref(false)
 const editingRecord = ref<any>(null)
@@ -86,27 +88,21 @@ function openEditModal(record: any) {
 
 async function handleSubmit() {
   try {
-    console.log('handleSubmit called, editingRecord:', editingRecord.value)
     const data = {
       ...form.value,
       date: new Date(form.value.date).toISOString(),
     }
-    console.log('Form data:', data)
     
     if (editingRecord.value) {
-      console.log('Updating record:', editingRecord.value.id)
       await recordStore.updateRecord(editingRecord.value.id, data)
-      console.log('Update successful')
+      toastStore.success('记录更新成功')
     } else {
-      console.log('Creating new record')
       await recordStore.createRecord(data)
-      console.log('Create successful')
+      toastStore.success('记录创建成功')
     }
     showModal.value = false
-    console.log('Modal closed')
   } catch (error: any) {
-    console.error('Error in handleSubmit:', error)
-    alert('操作失败: ' + (error.message || '未知错误'))
+    toastStore.error('操作失败: ' + (error.response?.data?.detail || error.message || '未知错误'))
   }
 }
 
