@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useWalletStore } from '@/stores/wallet'
+import { useToastStore } from '@/stores/toast'
 import { walletApi } from '@/api'
 import { WalletType } from '@/types'
 import type { WalletCreate } from '@/types'
 
 const walletStore = useWalletStore()
+const toastStore = useToastStore()
 
 const showModal = ref(false)
 const showTransferModal = ref(false)
@@ -86,7 +88,7 @@ async function handleSubmit() {
     }
     showModal.value = false
   } catch (e: any) {
-    alert(e.response?.data?.detail || '保存失败，请重试')
+    toastStore.error(e.response?.data?.detail || '保存失败，请重试')
   } finally {
     submitting.value = false
   }

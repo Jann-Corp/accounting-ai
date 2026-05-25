@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useWalletStore } from '@/stores/wallet'
 import { useAIRecordStore } from '@/stores/aiRecord'
 import RecordModal from '@/components/RecordModal.vue'
+import Toast from '@/components/Toast.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -143,5 +144,8 @@ watch(() => route.path, (p) => {
 
     <!-- Record Modal -->
     <RecordModal :show="showRecordModal" @close="showRecordModal = false" />
+    
+    <!-- Toast Notifications -->
+    <Toast />
   </div>
 </template>

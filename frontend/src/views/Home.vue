@@ -6,6 +6,7 @@ import { useRecordStore } from '@/stores/record'
 import { useCategoryStore } from '@/stores/category'
 import { useAuthStore } from '@/stores/auth'
 import { useAIRecordStore } from '@/stores/aiRecord'
+import { useToastStore } from '@/stores/toast'
 import { statsApi } from '@/api'
 import type { MonthlyStats, CategoryBreakdown } from '@/types'
 import RecordModal from '@/components/RecordModal.vue'
@@ -17,6 +18,7 @@ const recordStore = useRecordStore()
 const categoryStore = useCategoryStore()
 const authStore = useAuthStore()
 const aiRecordStore = useAIRecordStore()
+const toastStore = useToastStore()
 
 const monthlyStats = ref<MonthlyStats | null>(null)
 const categoryBreakdown = ref<CategoryBreakdown[]>([])
@@ -40,7 +42,7 @@ onMounted(async () => {
     monthlyStats.value = statsRes.data
     categoryBreakdown.value = breakdownRes.data.breakdown.slice(0, 6)
   } catch (e) {
-    console.error('Failed to load stats', e)
+    toastStore.error('加载统计数据失败')
   }
 })
 
