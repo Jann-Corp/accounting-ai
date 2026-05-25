@@ -183,6 +183,7 @@ function formatExpiry(dateStr: string | null) {
             />
             <p class="text-xs text-gray-400 mt-1">留空表示永不过期</p>
           </div>
+        </form>
         </div>
         
         <div class="mobile-modal-footer">
