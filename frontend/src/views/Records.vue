@@ -3,17 +3,17 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRecordStore } from '@/stores/record'
 import { useWalletStore } from '@/stores/wallet'
 import { useCategoryStore } from '@/stores/category'
+import { useToastStore } from '@/stores/toast'
 import { RecordType } from '@/types'
 import type { RecordStatus } from '@/types'
-import RecordModal from '@/components/RecordModal.vue'
 import { formatDateOnly } from '@/utils/date'
 
 const recordStore = useRecordStore()
 const walletStore = useWalletStore()
 const categoryStore = useCategoryStore()
+const toastStore = useToastStore()
 
 const showModal = ref(false)
-const showRecordModal = ref(false)
 const editingRecord = ref<any>(null)
 const filterType = ref<RecordType | ''>('')
 const filterStatus = ref<RecordStatus | ''>('')
@@ -87,16 +87,23 @@ function openEditModal(record: any) {
 }
 
 async function handleSubmit() {
-  const data = {
-    ...form.value,
-    date: new Date(form.value.date).toISOString(),
+  try {
+    const data = {
+      ...form.value,
+      date: new Date(form.value.date).toISOString(),
+    }
+    
+    if (editingRecord.value) {
+      await recordStore.updateRecord(editingRecord.value.id, data)
+      toastStore.success('记录更新成功')
+    } else {
+      await recordStore.createRecord(data)
+      toastStore.success('记录创建成功')
+    }
+    showModal.value = false
+  } catch (error: any) {
+    toastStore.error('操作失败: ' + (error.response?.data?.detail || error.message || '未知错误'))
   }
-  if (editingRecord.value) {
-    await recordStore.updateRecord(editingRecord.value.id, data)
-  } else {
-    await recordStore.createRecord(data)
-  }
-  showModal.value = false
 }
 
 async function handleDelete(id: number) {
@@ -167,7 +174,7 @@ function resetSwipe(recordId: number) {
     <div class="flex justify-between items-center">
       <h1 class="text-5xl font-semibold text-gray-900 tracking-tight">流水</h1>
       <button
-        @click="showRecordModal = true"
+        @click="openAddModal"
         class="bg-gray-900 text-white px-8 py-3.5 rounded-full hover:opacity-85 font-medium text-sm"
       >
         记一笔
@@ -257,54 +264,51 @@ function resetSwipe(recordId: number) {
         </div>
         
         <div class="mobile-modal-content">
-          <form @submit.prevent="handleSubmit" class="space-y-5">
-          <div>
-            <label class="block text-sm font-medium text-gray-900 mb-2">类型</label>
-            <select v-model="form.record_type" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-600">
-              <option value="expense">支出</option>
-              <option value="income">收入</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-900 mb-2">金额</label>
-            <input v-model.number="form.amount" type="number" step="0.01" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-900" required />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-900 mb-2">账户</label>
-            <select v-model="form.wallet_id" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-600" required>
-              <option v-for="w in walletStore.wallets" :key="w.id" :value="w.id">{{ w.name }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-900 mb-2">分类</label>
-            <select v-model="form.category_id" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-600">
-              <option :value="null">未分类</option>
-              <option v-for="c in categoryStore.categories" :key="c.id" :value="c.id">
-                {{ c.icon }} {{ c.name }}
-              </option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-900 mb-2">备注</label>
-            <input v-model="form.note" type="text" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-900" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-900 mb-2">日期</label>
-            <input v-model="form.date" type="datetime-local" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-900" required />
-          </div>
-        </form>
-        </div>
-        
-        <div class="mobile-modal-footer">
-          <div class="flex gap-3">
-            <button type="button" @click="showModal = false" class="flex-1 py-3 border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition-colors">取消</button>
-            <button type="submit" class="flex-1 py-3 bg-gray-900 text-white rounded-full hover:opacity-85 transition-opacity">保存</button>
-          </div>
+          <form id="recordForm" @submit.prevent="handleSubmit" class="space-y-5">
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2">类型</label>
+              <select v-model="form.record_type" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-600">
+                <option value="expense">支出</option>
+                <option value="income">收入</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2">金额</label>
+              <input v-model.number="form.amount" type="number" step="0.01" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-900" required />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2">账户</label>
+              <select v-model="form.wallet_id" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-600" required>
+                <option v-for="w in walletStore.wallets" :key="w.id" :value="w.id">{{ w.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2">分类</label>
+              <select v-model="form.category_id" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-600">
+                <option :value="null">未分类</option>
+                <option v-for="c in categoryStore.categories" :key="c.id" :value="c.id">
+                  {{ c.icon }} {{ c.name }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2">备注</label>
+              <input v-model="form.note" type="text" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-900" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-900 mb-2">日期</label>
+              <input v-model="form.date" type="datetime-local" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-900" required />
+            </div>
+            
+            <div class="mobile-modal-footer">
+              <div class="flex gap-3">
+                <button type="button" @click="showModal = false" class="flex-1 py-3 border border-gray-200 rounded-full text-gray-700 hover:bg-gray-50 transition-colors">取消</button>
+                <button type="submit" class="flex-1 py-3 bg-gray-900 text-white rounded-full hover:opacity-85 transition-opacity">保存</button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- Record Modal -->
-  <RecordModal :show="showRecordModal" @close="showRecordModal = false" />
 </template>

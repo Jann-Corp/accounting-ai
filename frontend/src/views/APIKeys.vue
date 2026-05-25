@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useApiKeyStore } from '@/stores/apikey'
+import { useToastStore } from '@/stores/toast'
 import type { ApiKeyCreate } from '@/types'
 import { formatDate } from '@/utils/date'
 
 const apiKeyStore = useApiKeyStore()
+const toastStore = useToastStore()
 
 const showModal = ref(false)
 const showKeyModal = ref(false)
@@ -46,8 +48,7 @@ async function handleCreate() {
     showKeyModal.value = true
     form.value = { name: '', expires_at: null }
   } catch (error: any) {
-    console.error('Failed to create API key:', error)
-    alert('创建失败：' + (error.response?.data?.detail || error.message || '未知错误'))
+    toastStore.error('创建失败：' + (error.response?.data?.detail || error.message || '未知错误'))
   } finally {
     creating.value = false
   }

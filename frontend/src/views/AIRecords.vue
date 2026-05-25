@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
 import { aiApi } from '@/api'
 import { useAIRecordStore } from '@/stores/aiRecord'
+import { useToastStore } from '@/stores/toast'
 import { formatDate } from '@/utils/date'
 
 interface RecognizedRecord {
@@ -13,6 +14,9 @@ interface RecognizedRecord {
   category_id: number | null
   confidence: number
 }
+
+const aiRecordStore = useAIRecordStore()
+const toastStore = useToastStore()
 
 interface Job {
   id: number
@@ -39,8 +43,6 @@ const LIMIT = 20
 const sentinel = ref<HTMLElement | null>(null)
 
 let sentinelObserver: IntersectionObserver | null = null
-
-const aiRecordStore = useAIRecordStore()
 
 // 使用 computed 确保 pendingRecords 是响应式的
 const pendingRecords = computed(() => aiRecordStore.pendingRecords)
@@ -130,7 +132,7 @@ async function confirmRecord(recordId: number) {
   try {
     await aiRecordStore.confirmRecord(recordId)
   } catch (e: any) {
-    alert('确认失败：' + (e.response?.data?.detail || e.message))
+    toastStore.error('确认失败：' + (e.response?.data?.detail || e.message))
   } finally {
     processingRecords.value.delete(recordId)
   }
@@ -142,7 +144,7 @@ async function rejectRecord(recordId: number) {
   try {
     await aiRecordStore.rejectRecord(recordId)
   } catch (e: any) {
-    alert('拒绝失败：' + (e.response?.data?.detail || e.message))
+    toastStore.error('拒绝失败：' + (e.response?.data?.detail || e.message))
   } finally {
     processingRecords.value.delete(recordId)
   }
