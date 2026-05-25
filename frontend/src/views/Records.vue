@@ -257,6 +257,7 @@ function resetSwipe(recordId: number) {
         </div>
         
         <div class="mobile-modal-content">
+          <form @submit.prevent="handleSubmit" class="space-y-5">
           <div>
             <label class="block text-sm font-medium text-gray-900 mb-2">类型</label>
             <select v-model="form.record_type" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-600">

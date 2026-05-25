@@ -161,6 +161,7 @@ async function handleDelete(id: number) {
         </div>
         
         <div class="mobile-modal-content">
+          <form @submit.prevent="handleSubmit" class="space-y-5">
           <div>
             <label class="block text-sm font-medium text-gray-900 mb-2">分类名称</label>
             <input v-model="form.name" type="text" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-900" required />

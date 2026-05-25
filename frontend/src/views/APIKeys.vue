@@ -163,6 +163,7 @@ function formatExpiry(dateStr: string | null) {
         </div>
         
         <div class="mobile-modal-content">
+          <form @submit.prevent="handleCreate" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Key 名称</label>
             <input
@@ -210,6 +211,9 @@ function formatExpiry(dateStr: string | null) {
           <button @click="showKeyModal = false" class="p-2 hover:bg-gray-100 rounded-lg">
             <span class="text-xl">✕</span>
           </button>
+        </div>
+        
+        <div class="mobile-modal-content">
         </div>
         
         <div class="mobile-modal-content">
