@@ -187,6 +187,7 @@ async function handleDelete(id: number) {
               </button>
             </div>
           </div>
+        </form>
         </div>
         
         <div class="mobile-modal-footer">
