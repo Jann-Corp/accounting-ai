@@ -14,13 +14,16 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:8003',
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:8003',
         changeOrigin: true,
       },
     },
+    headers: {
+      'Content-Security-Policy': "script-src 'self' 'unsafe-inline' 'unsafe-eval' chrome-extension:; style-src 'self' 'unsafe-inline' chrome-extension:;"
+    }
   },
 })
