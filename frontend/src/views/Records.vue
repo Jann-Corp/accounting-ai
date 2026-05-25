@@ -292,6 +292,7 @@ function resetSwipe(recordId: number) {
             <label class="block text-sm font-medium text-gray-900 mb-2">日期</label>
             <input v-model="form.date" type="datetime-local" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-900" required />
           </div>
+        </form>
         </div>
         
         <div class="mobile-modal-footer">
