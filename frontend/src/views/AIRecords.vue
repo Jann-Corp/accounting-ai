@@ -406,9 +406,9 @@ onUnmounted(() => {
                 <span class="text-xs text-gray-400">(点击可查看大图)</span>
               </div>
               <div class="flex justify-center">
-                <a :href="'http://localhost:8000' + job.original_image_url" target="_blank" class="block">
+                <a :href="job.original_image_url" target="_blank" class="block">
                   <img
-                    :src="'http://localhost:8000' + job.original_image_url"
+                    :src="job.original_image_url"
                     class="max-w-full max-h-96 rounded-lg shadow-md border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                     alt="原始小票图片"
                   />
