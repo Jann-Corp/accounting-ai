@@ -152,7 +152,7 @@ async function rejectRecord(recordId: number) {
 function setupSentinelObserver() {
   if (!sentinel.value || sentinelObserver) return
   sentinelObserver = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && activeTab.value === 'jobs') {
+    if (entries[0].isIntersecting && activeTab.value === 'jobs' && hasMore.value && !loadingMore.value) {
       loadMore()
     }
   }, { threshold: 0.1 })
@@ -166,15 +166,25 @@ onMounted(async () => {
   // Sentinel is inside v-if="activeTab === 'jobs'", so it may not exist yet.
   // If activeTab is already 'jobs' (or after a tick), try to set up.
   // Otherwise, a watch on activeTab below will retry once the tab switches.
-  await nextTick()
-  setupSentinelObserver()
+  if (activeTab.value === 'jobs') {
+    await nextTick()
+    setupSentinelObserver()
+  }
 })
 
 // Watch activeTab to set up observer when jobs tab becomes visible
 watch(activeTab, async (tab) => {
   if (tab === 'jobs') {
     await nextTick()
+    // 销毁现有的observer
+    sentinelObserver?.disconnect()
+    sentinelObserver = null
+    // 重新设置observer
     setupSentinelObserver()
+  } else {
+    // 当离开jobs tab时，销毁observer
+    sentinelObserver?.disconnect()
+    sentinelObserver = null
   }
 })
 
@@ -389,6 +399,23 @@ onUnmounted(() => {
 
           <!-- Done: records -->
           <div v-else-if="job.status === 'done'">
+            <!-- Original image preview -->
+            <div v-if="job.original_image_url" class="mt-4 mb-4">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-sm font-medium text-gray-700">📷 原始图片</span>
+                <span class="text-xs text-gray-400">(点击可查看大图)</span>
+              </div>
+              <div class="flex justify-center">
+                <a :href="job.original_image_url" target="_blank" class="block">
+                  <img
+                    :src="job.original_image_url"
+                    class="max-w-full max-h-96 rounded-lg shadow-md border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                    alt="原始小票图片"
+                  />
+                </a>
+              </div>
+            </div>
+
             <div v-if="job.records.length === 0" class="mt-3 text-center py-4 text-gray-400 text-sm">
               未识别出消费记录
             </div>
