@@ -22,8 +22,5 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-    headers: {
-      'Content-Security-Policy': "script-src 'self' 'unsafe-inline' 'unsafe-eval' chrome-extension:; style-src 'self' 'unsafe-inline' chrome-extension:;"
-    }
   },
 })
