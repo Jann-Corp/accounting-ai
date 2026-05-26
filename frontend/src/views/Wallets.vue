@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useWalletStore } from '@/stores/wallet'
 import { useToastStore } from '@/stores/toast'
 import { walletApi } from '@/api'
 import { WalletType } from '@/types'
 import type { WalletCreate } from '@/types'
+import { confirmDelete } from '@/utils/confirm'
 
 const walletStore = useWalletStore()
 const toastStore = useToastStore()
@@ -95,8 +96,14 @@ async function handleSubmit() {
 }
 
 async function handleDelete(id: number) {
-  if (confirm('确定要删除这个账户吗？')) {
-    await walletStore.deleteWallet(id)
+  const confirmed = await confirmDelete('确定要删除这个账户吗？')
+  if (confirmed) {
+    try {
+      await walletStore.deleteWallet(id)
+      toastStore.success('账户删除成功')
+    } catch (error: any) {
+      toastStore.error('删除失败: ' + (error.response?.data?.detail || error.message || '未知错误'))
+    }
   }
 }
 
