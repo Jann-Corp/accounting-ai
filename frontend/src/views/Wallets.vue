@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useWalletStore } from '@/stores/wallet'
 import { useToastStore } from '@/stores/toast'
 import { walletApi } from '@/api'
