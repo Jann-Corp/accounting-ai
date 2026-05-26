@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useCategoryStore } from '@/stores/category'
+import { useToastStore } from '@/stores/toast'
 import { CategoryType } from '@/types'
 import type { Category, CategoryCreate } from '@/types'
+import { confirmDelete } from '@/utils/confirm'
 
 const categoryStore = useCategoryStore()
+const toastStore = useToastStore()
 
 const showModal = ref(false)
 const editingCategory = ref<Category | null>(null)
@@ -73,8 +76,14 @@ async function handleSubmit() {
 }
 
 async function handleDelete(id: number) {
-  if (confirm('确定要删除这个分类吗？')) {
-    await categoryStore.deleteCategory(id)
+  const confirmed = await confirmDelete('确定要删除这个分类吗？')
+  if (confirmed) {
+    try {
+      await categoryStore.deleteCategory(id)
+      toastStore.success('分类删除成功')
+    } catch (error: any) {
+      toastStore.error('删除失败: ' + (error.response?.data?.detail || error.message || '未知错误'))
+    }
   }
 }
 </script>

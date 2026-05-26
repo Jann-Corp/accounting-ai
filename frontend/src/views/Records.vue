@@ -7,6 +7,7 @@ import { useToastStore } from '@/stores/toast'
 import { RecordType } from '@/types'
 import type { RecordStatus } from '@/types'
 import { formatDateOnly } from '@/utils/date'
+import { confirmDelete } from '@/utils/confirm'
 
 const recordStore = useRecordStore()
 const walletStore = useWalletStore()
@@ -107,9 +108,15 @@ async function handleSubmit() {
 }
 
 async function handleDelete(id: number) {
-  if (confirm('确定要删除这条记录吗？')) {
-    await recordStore.deleteRecord(id)
-    swipedRecords.value.delete(id)
+  const confirmed = await confirmDelete('确定要删除这条记录吗？')
+  if (confirmed) {
+    try {
+      await recordStore.deleteRecord(id)
+      toastStore.success('记录删除成功')
+      swipedRecords.value.delete(id)
+    } catch (error: any) {
+      toastStore.error('删除失败: ' + (error.response?.data?.detail || error.message || '未知错误'))
+    }
   }
 }
 

@@ -4,6 +4,7 @@ import { useApiKeyStore } from '@/stores/apikey'
 import { useToastStore } from '@/stores/toast'
 import type { ApiKeyCreate } from '@/types'
 import { formatDate } from '@/utils/date'
+import { confirmDelete } from '@/utils/confirm'
 
 const apiKeyStore = useApiKeyStore()
 const toastStore = useToastStore()
@@ -55,8 +56,14 @@ async function handleCreate() {
 }
 
 async function handleDelete(id: number) {
-  if (confirm('确定要删除这个 API Key 吗？删除后所有使用该 Key 的调用将立即失效。')) {
-    await apiKeyStore.deleteApiKey(id)
+  const confirmed = await confirmDelete('确定要删除这个 API Key 吗？删除后所有使用该 Key 的调用将立即失效。')
+  if (confirmed) {
+    try {
+      await apiKeyStore.deleteApiKey(id)
+      toastStore.success('API Key 删除成功')
+    } catch (error: any) {
+      toastStore.error('删除失败: ' + (error.response?.data?.detail || error.message || '未知错误'))
+    }
   }
 }
 
