@@ -98,9 +98,10 @@ def test_list_recognition_jobs_empty(client, auth_headers):
     response = client.get("/api/v1/ai/jobs", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
-    # API returns paginated structure
     assert data["data"] == []
     assert data["total"] == 0
+    assert data["limit"] == 20
+    assert data["offset"] == 0
 
 
 def test_list_recognition_jobs(client, auth_headers):
@@ -415,13 +416,15 @@ def test_record_type_enum_conversion():
 def test_ai_service_initialization(client, auth_headers):
     """Test AI service initialization and configuration."""
     from app.services.ai_service import AIService
+    from app.core.config import settings
     
     service = AIService()
-    # The service reads provider from settings
-    assert service.provider in ["qwen", "minimax"]
-    # Test that the service is properly initialized
-    assert hasattr(service, 'provider')
+    # The service reads API key from environment or settings
+    # We can verify the service configuration is loaded
+    assert service.provider == settings.AI_PROVIDER
+    # Test that service can be instantiated and has expected methods
     assert hasattr(service, 'recognize_receipt')
+    assert hasattr(service, '_get_prompt')
 
 
 def test_ai_job_status_processing(client, auth_headers, db, test_user):

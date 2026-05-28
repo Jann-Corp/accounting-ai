@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useApiKeyStore } from '@/stores/apikey'
+import { useToastStore } from '@/stores/toast'
 import type { ApiKeyCreate } from '@/types'
 import { formatDate } from '@/utils/date'
+import { confirmDelete } from '@/utils/confirm'
 
 const apiKeyStore = useApiKeyStore()
+const toastStore = useToastStore()
 
 const showModal = ref(false)
 const showKeyModal = ref(false)
@@ -46,16 +49,21 @@ async function handleCreate() {
     showKeyModal.value = true
     form.value = { name: '', expires_at: null }
   } catch (error: any) {
-    console.error('Failed to create API key:', error)
-    alert('创建失败：' + (error.response?.data?.detail || error.message || '未知错误'))
+    toastStore.error('创建失败：' + (error.response?.data?.detail || error.message || '未知错误'))
   } finally {
     creating.value = false
   }
 }
 
 async function handleDelete(id: number) {
-  if (confirm('确定要删除这个 API Key 吗？删除后所有使用该 Key 的调用将立即失效。')) {
-    await apiKeyStore.deleteApiKey(id)
+  const confirmed = await confirmDelete('确定要删除这个 API Key 吗？删除后所有使用该 Key 的调用将立即失效。')
+  if (confirmed) {
+    try {
+      await apiKeyStore.deleteApiKey(id)
+      toastStore.success('API Key 删除成功')
+    } catch (error: any) {
+      toastStore.error('删除失败: ' + (error.response?.data?.detail || error.message || '未知错误'))
+    }
   }
 }
 
@@ -163,6 +171,7 @@ function formatExpiry(dateStr: string | null) {
         </div>
         
         <div class="mobile-modal-content">
+          <form @submit.prevent="handleCreate" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Key 名称</label>
             <input
@@ -182,6 +191,7 @@ function formatExpiry(dateStr: string | null) {
             />
             <p class="text-xs text-gray-400 mt-1">留空表示永不过期</p>
           </div>
+        </form>
         </div>
         
         <div class="mobile-modal-footer">
@@ -200,7 +210,7 @@ function formatExpiry(dateStr: string | null) {
     </div>
 
     <!-- Show Key Once Modal -->
-    <div v-if="showKeyModal" class="mobile-modal-container">
+    <div v-if="showKeyModal" class="mobile-modal-container" @click.self="showKeyModal = false">
       <div class="mobile-modal">
         <div class="mobile-modal-header">
           <div class="flex items-center gap-2">
@@ -213,15 +223,18 @@ function formatExpiry(dateStr: string | null) {
         </div>
         
         <div class="mobile-modal-content">
+        </div>
+        
+        <div class="mobile-modal-content">
           <p class="text-sm text-red-500 mb-3">⚠️ Key 仅显示一次，请立即复制保存！</p>
           <div class="bg-gray-100 rounded-lg p-3 font-mono text-sm break-all text-gray-800 mb-4">
             {{ newKey }}
           </div>
-        <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-700 flex-shrink-0">
-          <p class="font-medium mb-1">⚠️ 重要提醒</p>
-          <p>此 Key 只会显示一次，关闭弹窗后将无法再次查看。</p>
-          <p>请立即复制并妥善保存到安全的地方。</p>
-        </div>
+          <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-700">
+            <p class="font-medium mb-1">⚠️ 重要提醒</p>
+            <p>此 Key 只会显示一次，关闭弹窗后将无法再次查看。</p>
+            <p>请立即复制并妥善保存到安全的地方。</p>
+          </div>
         </div>
         
         <div class="mobile-modal-footer">

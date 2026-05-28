@@ -5,6 +5,9 @@ import { useAuthStore } from '@/stores/auth'
 import { useWalletStore } from '@/stores/wallet'
 import { useAIRecordStore } from '@/stores/aiRecord'
 import RecordModal from '@/components/RecordModal.vue'
+import Toast from '@/components/Toast.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { confirmLogout } from '@/utils/confirm'
 
 const router = useRouter()
 const route = useRoute()
@@ -29,8 +32,9 @@ function handleLogout() {
   router.push('/login')
 }
 
-function confirmLogout() {
-  if (confirm('确定要退出登录吗？')) {
+async function logoutWithConfirm() {
+  const confirmed = await confirmLogout()
+  if (confirmed) {
     handleLogout()
   }
 }
@@ -73,7 +77,7 @@ watch(() => route.path, (p) => {
           <span class="text-xl">☰</span>
         </button>
         <h1 class="text-xl font-medium text-gray-900" style="letter-spacing: -0.32px;">💰 AI记账</h1>
-        <button @click="confirmLogout" class="p-3 rounded-full hover:bg-gray-100 transition-colors">
+        <button @click="logoutWithConfirm" class="p-3 rounded-full hover:bg-gray-100 transition-colors">
           <span class="text-xl">🚪</span>
         </button>
       </div>
@@ -143,5 +147,11 @@ watch(() => route.path, (p) => {
 
     <!-- Record Modal -->
     <RecordModal :show="showRecordModal" @close="showRecordModal = false" />
+    
+    <!-- Toast Notifications -->
+    <Toast />
+    
+    <!-- Confirm Dialog -->
+    <ConfirmDialog />
   </div>
 </template>

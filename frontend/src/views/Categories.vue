@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useCategoryStore } from '@/stores/category'
+import { useToastStore } from '@/stores/toast'
 import { CategoryType } from '@/types'
 import type { Category, CategoryCreate } from '@/types'
+import { confirmDelete } from '@/utils/confirm'
 
 const categoryStore = useCategoryStore()
+const toastStore = useToastStore()
 
 const showModal = ref(false)
 const editingCategory = ref<Category | null>(null)
@@ -73,8 +76,14 @@ async function handleSubmit() {
 }
 
 async function handleDelete(id: number) {
-  if (confirm('确定要删除这个分类吗？')) {
-    await categoryStore.deleteCategory(id)
+  const confirmed = await confirmDelete('确定要删除这个分类吗？')
+  if (confirmed) {
+    try {
+      await categoryStore.deleteCategory(id)
+      toastStore.success('分类删除成功')
+    } catch (error: any) {
+      toastStore.error('删除失败: ' + (error.response?.data?.detail || error.message || '未知错误'))
+    }
   }
 }
 </script>
@@ -151,7 +160,6 @@ async function handleDelete(id: number) {
       还没有分类
     </div>
 
-<!-- Modal -->
     <div v-if="showModal" class="mobile-modal-container" @click.self="showModal = false">
       <div class="mobile-modal">
         <div class="mobile-modal-header">
@@ -162,6 +170,7 @@ async function handleDelete(id: number) {
         </div>
         
         <div class="mobile-modal-content">
+          <form @submit.prevent="handleSubmit" class="space-y-5">
           <div>
             <label class="block text-sm font-medium text-gray-900 mb-2">分类名称</label>
             <input v-model="form.name" type="text" class="w-full border border-gray-100 rounded-full px-4 py-3 bg-white text-gray-900" required />
@@ -187,6 +196,7 @@ async function handleDelete(id: number) {
               </button>
             </div>
           </div>
+        </form>
         </div>
         
         <div class="mobile-modal-footer">

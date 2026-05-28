@@ -106,8 +106,9 @@ def test_record_type_string_vs_enum_comparison():
     assert RecordType.EXPENSE == RecordType.EXPENSE
     
     # Bug: comparing string with enum fails (this is what was happening)
-    # Uncomment to see the failure:
-    # assert "expense" == RecordType.EXPENSE  # This would fail!
+    # In Python, the enum value may compare equal to its string representation,
+    # but in SQLAlchemy queries, this can cause issues
+    # assert "expense" == RecordType.EXPENSE  # This may or may not work
     
     # Simulate what the stats query does
     sample_types = [RecordType.EXPENSE, RecordType.INCOME, "expense"]  # Mixed

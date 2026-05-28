@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
 import { aiApi } from '@/api'
 import { useAIRecordStore } from '@/stores/aiRecord'
+import { useToastStore } from '@/stores/toast'
 import { formatDate } from '@/utils/date'
 
 interface RecognizedRecord {
@@ -13,6 +14,9 @@ interface RecognizedRecord {
   category_id: number | null
   confidence: number
 }
+
+const aiRecordStore = useAIRecordStore()
+const toastStore = useToastStore()
 
 interface Job {
   id: number
@@ -40,10 +44,8 @@ const sentinel = ref<HTMLElement | null>(null)
 
 let sentinelObserver: IntersectionObserver | null = null
 
-const aiRecordStore = useAIRecordStore()
-
-// 使用 store 中的 pending records
-const pendingRecords = aiRecordStore.pendingRecords
+// 使用 computed 确保 pendingRecords 是响应式的
+const pendingRecords = computed(() => aiRecordStore.pendingRecords)
 
 function parseResult(job: Job): RecognizedRecord[] {
   if (!job.result_json) return []
@@ -130,7 +132,7 @@ async function confirmRecord(recordId: number) {
   try {
     await aiRecordStore.confirmRecord(recordId)
   } catch (e: any) {
-    alert('确认失败：' + (e.response?.data?.detail || e.message))
+    toastStore.error('确认失败：' + (e.response?.data?.detail || e.message))
   } finally {
     processingRecords.value.delete(recordId)
   }
@@ -142,7 +144,7 @@ async function rejectRecord(recordId: number) {
   try {
     await aiRecordStore.rejectRecord(recordId)
   } catch (e: any) {
-    alert('拒绝失败：' + (e.response?.data?.detail || e.message))
+    toastStore.error('拒绝失败：' + (e.response?.data?.detail || e.message))
   } finally {
     processingRecords.value.delete(recordId)
   }
@@ -152,7 +154,7 @@ async function rejectRecord(recordId: number) {
 function setupSentinelObserver() {
   if (!sentinel.value || sentinelObserver) return
   sentinelObserver = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && activeTab.value === 'jobs') {
+    if (entries[0].isIntersecting && activeTab.value === 'jobs' && hasMore.value && !loadingMore.value) {
       loadMore()
     }
   }, { threshold: 0.1 })
@@ -166,15 +168,25 @@ onMounted(async () => {
   // Sentinel is inside v-if="activeTab === 'jobs'", so it may not exist yet.
   // If activeTab is already 'jobs' (or after a tick), try to set up.
   // Otherwise, a watch on activeTab below will retry once the tab switches.
-  await nextTick()
-  setupSentinelObserver()
+  if (activeTab.value === 'jobs') {
+    await nextTick()
+    setupSentinelObserver()
+  }
 })
 
 // Watch activeTab to set up observer when jobs tab becomes visible
 watch(activeTab, async (tab) => {
   if (tab === 'jobs') {
     await nextTick()
+    // 销毁现有的observer
+    sentinelObserver?.disconnect()
+    sentinelObserver = null
+    // 重新设置observer
     setupSentinelObserver()
+  } else {
+    // 当离开jobs tab时，销毁observer
+    sentinelObserver?.disconnect()
+    sentinelObserver = null
   }
 })
 
@@ -336,7 +348,7 @@ onUnmounted(() => {
             <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
               <img
                 v-if="job.original_image_url"
-                :src="'http://localhost:8000' + job.original_image_url"
+                :src="job.original_image_url"
                 class="w-full h-full object-cover"
                 @error="(e) => (e.target as any).style.display = 'none'"
               />
@@ -389,6 +401,23 @@ onUnmounted(() => {
 
           <!-- Done: records -->
           <div v-else-if="job.status === 'done'">
+            <!-- Original image preview -->
+            <div v-if="job.original_image_url" class="mt-4 mb-4">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-sm font-medium text-gray-700">📷 原始图片</span>
+                <span class="text-xs text-gray-400">(点击可查看大图)</span>
+              </div>
+              <div class="flex justify-center">
+                <a :href="job.original_image_url" target="_blank" class="block">
+                  <img
+                    :src="job.original_image_url"
+                    class="max-w-full max-h-96 rounded-lg shadow-md border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                    alt="原始小票图片"
+                  />
+                </a>
+              </div>
+            </div>
+
             <div v-if="job.records.length === 0" class="mt-3 text-center py-4 text-gray-400 text-sm">
               未识别出消费记录
             </div>
