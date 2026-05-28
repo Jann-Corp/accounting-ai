@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useApiKeyStore } from '@/stores/apikey'
+import { useToastStore } from '@/stores/toast'
 import type { ApiKeyCreate } from '@/types'
+import { formatDate } from '@/utils/date'
+import { confirmDelete } from '@/utils/confirm'
 
 const apiKeyStore = useApiKeyStore()
+const toastStore = useToastStore()
 
 const showModal = ref(false)
 const showKeyModal = ref(false)
@@ -18,6 +22,23 @@ onMounted(() => {
   apiKeyStore.fetchApiKeys()
 })
 
+// 禁止/恢复背景滚动
+watch(showModal, (val) => {
+  if (val) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+})
+
+watch(showKeyModal, (val) => {
+  if (val) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+})
+
 async function handleCreate() {
   creating.value = true
   try {
@@ -28,16 +49,21 @@ async function handleCreate() {
     showKeyModal.value = true
     form.value = { name: '', expires_at: null }
   } catch (error: any) {
-    console.error('Failed to create API key:', error)
-    alert('创建失败：' + (error.response?.data?.detail || error.message || '未知错误'))
+    toastStore.error('创建失败：' + (error.response?.data?.detail || error.message || '未知错误'))
   } finally {
     creating.value = false
   }
 }
 
 async function handleDelete(id: number) {
-  if (confirm('确定要删除这个 API Key 吗？删除后所有使用该 Key 的调用将立即失效。')) {
-    await apiKeyStore.deleteApiKey(id)
+  const confirmed = await confirmDelete('确定要删除这个 API Key 吗？删除后所有使用该 Key 的调用将立即失效。')
+  if (confirmed) {
+    try {
+      await apiKeyStore.deleteApiKey(id)
+      toastStore.success('API Key 删除成功')
+    } catch (error: any) {
+      toastStore.error('删除失败: ' + (error.response?.data?.detail || error.message || '未知错误'))
+    }
   }
 }
 
@@ -45,10 +71,6 @@ async function handleToggle(id: number, current: boolean) {
   await apiKeyStore.toggleApiKey(id, !current)
 }
 
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
-}
 
 function formatExpiry(dateStr: string | null) {
   if (!dateStr) return '永不过期'
@@ -139,10 +161,17 @@ function formatExpiry(dateStr: string | null) {
     </div>
 
     <!-- Create Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">新建 API Key</h2>
-        <form @submit.prevent="handleCreate" class="space-y-4">
+    <div v-if="showModal" class="mobile-modal-container" @click.self="showModal = false">
+      <div class="mobile-modal">
+        <div class="mobile-modal-header">
+          <h2 class="text-xl font-bold">新建 API Key</h2>
+          <button @click="showModal = false" class="p-2 hover:bg-gray-100 rounded-lg">
+            <span class="text-xl">✕</span>
+          </button>
+        </div>
+        
+        <div class="mobile-modal-content">
+          <form @submit.prevent="handleCreate" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Key 名称</label>
             <input
@@ -162,7 +191,11 @@ function formatExpiry(dateStr: string | null) {
             />
             <p class="text-xs text-gray-400 mt-1">留空表示永不过期</p>
           </div>
-          <div class="flex gap-3 pt-2">
+        </form>
+        </div>
+        
+        <div class="mobile-modal-footer">
+          <div class="flex gap-3">
             <button type="button" @click="showModal = false" class="flex-1 py-2 border rounded-lg">取消</button>
             <button
               type="submit"
@@ -172,30 +205,41 @@ function formatExpiry(dateStr: string | null) {
               {{ creating ? '创建中...' : '创建' }}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
 
     <!-- Show Key Once Modal -->
-    <div v-if="showKeyModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-md">
-        <div class="text-center mb-4">
-          <div class="text-5xl mb-3">🔑</div>
-          <h2 class="text-xl font-bold text-gray-800">API Key 已创建</h2>
-          <p class="text-sm text-red-500 mt-1">⚠️ Key 仅显示一次，请立即复制保存！</p>
+    <div v-if="showKeyModal" class="mobile-modal-container" @click.self="showKeyModal = false">
+      <div class="mobile-modal">
+        <div class="mobile-modal-header">
+          <div class="flex items-center gap-2">
+            <div class="text-2xl">🔑</div>
+            <h2 class="text-xl font-bold text-gray-800">API Key 已创建</h2>
+          </div>
+          <button @click="showKeyModal = false" class="p-2 hover:bg-gray-100 rounded-lg">
+            <span class="text-xl">✕</span>
+          </button>
         </div>
-        <div class="bg-gray-100 rounded-lg p-3 font-mono text-sm break-all text-gray-800">
-          {{ newKey }}
+        
+        <div class="mobile-modal-content">
         </div>
-        <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-700">
-          请妥善保管此 Key，不要泄露给他人。如若泄露，请立即删除并重新创建。
+        
+        <div class="mobile-modal-content">
+          <p class="text-sm text-red-500 mb-3">⚠️ Key 仅显示一次，请立即复制保存！</p>
+          <div class="bg-gray-100 rounded-lg p-3 font-mono text-sm break-all text-gray-800 mb-4">
+            {{ newKey }}
+          </div>
+          <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-700">
+            <p class="font-medium mb-1">⚠️ 重要提醒</p>
+            <p>此 Key 只会显示一次，关闭弹窗后将无法再次查看。</p>
+            <p>请立即复制并妥善保存到安全的地方。</p>
+          </div>
         </div>
-        <button
-          @click="showKeyModal = false"
-          class="w-full mt-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-        >
-          我已保存
-        </button>
+        
+        <div class="mobile-modal-footer">
+          <button @click="showKeyModal = false" class="w-full py-2 bg-gray-900 text-white rounded-lg">我知道了</button>
+        </div>
       </div>
     </div>
   </div>

@@ -6,9 +6,11 @@ import { useRecordStore } from '@/stores/record'
 import { useCategoryStore } from '@/stores/category'
 import { useAuthStore } from '@/stores/auth'
 import { useAIRecordStore } from '@/stores/aiRecord'
+import { useToastStore } from '@/stores/toast'
 import { statsApi } from '@/api'
 import type { MonthlyStats, CategoryBreakdown } from '@/types'
 import RecordModal from '@/components/RecordModal.vue'
+import { formatDateOnly } from '@/utils/date'
 
 const router = useRouter()
 const walletStore = useWalletStore()
@@ -16,6 +18,7 @@ const recordStore = useRecordStore()
 const categoryStore = useCategoryStore()
 const authStore = useAuthStore()
 const aiRecordStore = useAIRecordStore()
+const toastStore = useToastStore()
 
 const monthlyStats = ref<MonthlyStats | null>(null)
 const categoryBreakdown = ref<CategoryBreakdown[]>([])
@@ -39,7 +42,7 @@ onMounted(async () => {
     monthlyStats.value = statsRes.data
     categoryBreakdown.value = breakdownRes.data.breakdown.slice(0, 6)
   } catch (e) {
-    console.error('Failed to load stats', e)
+    toastStore.error('加载统计数据失败')
   }
 })
 
@@ -52,9 +55,6 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(amount)
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' })
-}
 </script>
 
 <template>
@@ -212,7 +212,7 @@ function formatDate(dateStr: string) {
               <span class="text-2xl">{{ record.category_icon || '📦' }}</span>
               <div>
                 <p class="text-base font-medium text-gray-900" style="letter-spacing: 0.24px;">{{ record.note || record.category_name }}</p>
-                <p class="text-xs text-gray-500 mt-1" style="letter-spacing: 0.16px;">{{ formatDate(record.date) }}</p>
+                <p class="text-xs text-gray-500 mt-1" style="letter-spacing: 0.16px;">{{ formatDateOnly(record.date) }}</p>
               </div>
             </div>
             <span :class="['text-xl font-medium', record.record_type === 'expense' ? 'text-red-500' : 'text-emerald-600']" style="letter-spacing: -0.32px;">
