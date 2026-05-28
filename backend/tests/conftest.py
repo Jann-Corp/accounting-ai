@@ -3,6 +3,10 @@ import pytest, sys, os, tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+# Set test environment variables BEFORE importing settings
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"  # Use in-memory database for tests
+os.environ["DB_PASSWORD"] = "test-password"  # Required for Settings validation
+
 _test_db_file = tempfile.mktemp(suffix=".db", prefix="test_acc_")
 os.environ["DATABASE_URL"] = f"sqlite:///{_test_db_file}"
 

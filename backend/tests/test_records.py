@@ -148,7 +148,7 @@ def test_reject_record(client, auth_headers, db, test_user, test_wallet):
         headers=auth_headers,
     )
     assert response.status_code == 200
-    assert "已拒绝" in response.json()["message"]
+    assert "已丢弃该记录" in response.json()["message"]
 
 
 def test_delete_record(client, auth_headers, db, test_user, test_wallet):
