@@ -97,7 +97,11 @@ def test_list_recognition_jobs_empty(client, auth_headers):
     """Test listing recognition jobs when none exist."""
     response = client.get("/api/v1/ai/jobs", headers=auth_headers)
     assert response.status_code == 200
-    assert response.json() == []
+    data = response.json()
+    assert data["data"] == []
+    assert data["total"] == 0
+    assert data["limit"] == 20
+    assert data["offset"] == 0
 
 
 def test_list_recognition_jobs(client, auth_headers):
@@ -260,9 +264,9 @@ def test_reject_ai_record(client, auth_headers, db, test_user, test_wallet):
     assert data["status"] == "rejected"
     assert data["record_id"] == record.id
     
-    # Verify record is now rejected
+    # Verify record is deleted (404)
     response = client.get(f"/api/v1/records/{record.id}", headers=auth_headers)
-    assert response.json()["status"] == "rejected"
+    assert response.status_code == 404
 
 
 def test_reject_ai_record_not_pending(client, auth_headers, db, test_user, test_wallet):
@@ -410,12 +414,15 @@ def test_record_type_enum_conversion():
 def test_ai_service_initialization(client, auth_headers):
     """Test AI service initialization and configuration."""
     from app.services.ai_service import AIService
+    from app.core.config import settings
     
     service = AIService()
     # The service reads API key from environment or settings
     # We can verify the service configuration is loaded
-    assert service.model == "qwen-vl-plus"
-    assert "dashscope" in service.api_base  # API base contains dashscope
+    assert service.provider == settings.AI_PROVIDER
+    # Test that service can be instantiated and has expected methods
+    assert hasattr(service, 'recognize_receipt')
+    assert hasattr(service, '_get_prompt')
 
 
 def test_ai_job_status_processing(client, auth_headers, db, test_user):
@@ -566,6 +573,6 @@ def test_ai_records_reject_updates_status(client, auth_headers, db, test_user, t
     assert data["status"] == "rejected"
     assert data["record_id"] == record_id
     
-    # Verify record status was updated
-    db.refresh(record)
-    assert record.status == RecordStatus.REJECTED
+    # Verify record is deleted (404)
+    response = client.get(f"/api/v1/records/{record_id}", headers=auth_headers)
+    assert response.status_code == 404

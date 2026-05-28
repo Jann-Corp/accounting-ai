@@ -3,19 +3,24 @@ import pytest, sys, os, tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+# Set test environment variables BEFORE importing settings
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"  # Use in-memory database for tests
+os.environ["DB_PASSWORD"] = "test-password"  # Required for Settings validation
+
 _test_db_file = tempfile.mktemp(suffix=".db", prefix="test_acc_")
 os.environ["DATABASE_URL"] = f"sqlite:///{_test_db_file}"
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+
+from app.database import Base  # Use the SAME Base as the app models
 
 _engine = create_engine(
     f"sqlite:///{_test_db_file}",
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
-Base = declarative_base()
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
 
 _counter = [0]
@@ -56,6 +61,8 @@ def setup_database():
     from app.models.wallet import Wallet
     from app.models.category import Category
     from app.models.record import Record
+    from app.models.apikey import ApiKey
+    from app.models.ai_recognition_job import AIRecognitionJob
     Base.metadata.create_all(bind=_engine)
     yield
     try:

@@ -175,6 +175,7 @@ def update_record(
 
     old_amount = record.amount
     old_wallet_id = record.wallet_id
+    old_record_type = record.record_type  # Save BEFORE modifying
 
     if record_data.amount is not None:
         record.amount = record_data.amount
@@ -191,16 +192,17 @@ def update_record(
 
     # If wallet changed or amount changed, update wallet balances
     if record.status == RecordStatus.CONFIRMED:
-        # Reverse old transaction
+        # Reverse old transaction using OLD record_type
         if old_wallet_id:
             old_wallet = db.query(Wallet).filter(Wallet.id == old_wallet_id).first()
             if old_wallet:
-                if record.record_type == RecordType.EXPENSE:
+                if old_record_type == RecordType.EXPENSE:
                     old_wallet.balance += old_amount
                 else:
                     old_wallet.balance -= old_amount
+                db.add(old_wallet)
 
-        # Apply new transaction
+        # Apply new transaction using NEW record_type
         if record.wallet_id:
             wallet = db.query(Wallet).filter(Wallet.id == record.wallet_id).first()
             if wallet:
@@ -301,6 +303,8 @@ def reject_record(
         raise HTTPException(status_code=400, detail="只能拒绝待确认状态的记录")
 
     # Restore wallet balance if this was an AI recognized record
+    # Note: AI-recognized PENDING records have already deducted the balance on creation,
+    #       so we need to rollback. Non-AI PENDING records have NOT deducted, so skip.
     if record.is_ai_recognized and record.wallet_id:
         from app.models.wallet import Wallet
         wallet = db.query(Wallet).filter(Wallet.id == record.wallet_id).first()
@@ -310,7 +314,7 @@ def reject_record(
             else:
                 wallet.balance -= record.amount
             db.add(wallet)
-    
+
     # Delete the rejected record
     db.delete(record)
     db.commit()
