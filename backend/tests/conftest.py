@@ -15,7 +15,6 @@ _engine = create_engine(
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
-Base = declarative_base()
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
 
 _counter = [0]
@@ -29,6 +28,7 @@ def get_test_db():
 
 @pytest.fixture(scope="function")
 def db():
+    from app.database import Base
     db = TestingSessionLocal()
     yield db
     # Clean up all rows after test
@@ -56,6 +56,10 @@ def setup_database():
     from app.models.wallet import Wallet
     from app.models.category import Category
     from app.models.record import Record
+    from app.models.ai_recognition_job import AIRecognitionJob
+    from app.models.apikey import ApiKey
+    from app.database import Base
+    
     Base.metadata.create_all(bind=_engine)
     yield
     try:

@@ -65,12 +65,12 @@ def test_ai_recognized_record_appears_in_stats(client, auth_headers, db, test_us
     assert data["record_count"] == 1, f"Expected 1 record, got {data.get('record_count')}"
     
     # Also test with category
-    from app.models.category import Category
+    from app.models.category import Category, CategoryType
     category = Category(
         user_id=test_user.id,
         name="餐饮",
         icon="🍜",
-        type="expense"
+        category_type=CategoryType.EXPENSE
     )
     db.add(category)
     db.commit()
@@ -114,12 +114,15 @@ def test_record_type_string_vs_enum_comparison():
     
     # Filter using enum (correct way)
     expense_records = [t for t in sample_types if t == RecordType.EXPENSE]
-    assert len(expense_records) == 1  # Only the enum value matches
+    # Because RecordType inherits from str, both enum and string value match
+    assert len(expense_records) == 2  # Both the enum and string value match
+    assert RecordType.EXPENSE in expense_records
+    assert "expense" in expense_records
     
     # Filter using string (buggy way - what was happening before)
     buggy_expense_records = [t for t in sample_types if t == "expense"]
-    assert len(buggy_expense_records) == 1  # Only the string value matches
-    assert buggy_expense_records[0] != RecordType.EXPENSE  # But they're not the same!
+    assert len(buggy_expense_records) == 2  # Both match because RecordType is a str enum
+    assert buggy_expense_records[0] == RecordType.EXPENSE  # They ARE the same!
 
 
 def test_ai_recognition_with_mock_service(client, auth_headers, db, test_user, test_wallet):
