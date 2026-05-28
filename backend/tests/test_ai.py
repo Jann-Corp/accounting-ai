@@ -122,7 +122,9 @@ def test_list_recognition_jobs(client, auth_headers):
     response = client.get("/api/v1/ai/jobs", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
-    assert len(data) >= 1
+    # API returns paginated structure
+    assert len(data["data"]) >= 1
+    assert data["total"] >= 1
 
 
 def test_get_job_detail(client, auth_headers):
@@ -264,7 +266,7 @@ def test_reject_ai_record(client, auth_headers, db, test_user, test_wallet):
     assert data["status"] == "rejected"
     assert data["record_id"] == record.id
     
-    # Verify record is deleted (404)
+    # Verify record is deleted (404 not found)
     response = client.get(f"/api/v1/records/{record.id}", headers=auth_headers)
     assert response.status_code == 404
 
@@ -573,6 +575,7 @@ def test_ai_records_reject_updates_status(client, auth_headers, db, test_user, t
     assert data["status"] == "rejected"
     assert data["record_id"] == record_id
     
-    # Verify record is deleted (404)
-    response = client.get(f"/api/v1/records/{record_id}", headers=auth_headers)
-    assert response.status_code == 404
+    # Verify record was deleted (not updated status)
+    from app.models.record import Record
+    deleted_record = db.query(Record).filter(Record.id == record_id).first()
+    assert deleted_record is None

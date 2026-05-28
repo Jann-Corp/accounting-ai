@@ -115,16 +115,15 @@ def test_record_type_string_vs_enum_comparison():
     
     # Filter using enum (correct way)
     expense_records = [t for t in sample_types if t == RecordType.EXPENSE]
-    # The enum value matches, and the string "expense" may also match
-    # depending on how the enum is defined
-    assert len(expense_records) >= 1  # At least the enum value matches
+    # Because RecordType inherits from str, both enum and string value match
+    assert len(expense_records) == 2  # Both the enum and string value match
+    assert RecordType.EXPENSE in expense_records
+    assert "expense" in expense_records
     
     # Filter using string (buggy way - what was happening before)
     buggy_expense_records = [t for t in sample_types if t == "expense"]
-    assert len(buggy_expense_records) >= 1  # At least the string value matches
-    
-    # The key insight: in SQLAlchemy queries, we should always use enum values
-    # not string literals, to ensure consistency
+    assert len(buggy_expense_records) == 2  # Both match because RecordType is a str enum
+    assert buggy_expense_records[0] == RecordType.EXPENSE  # They ARE the same!
 
 
 def test_ai_recognition_with_mock_service(client, auth_headers, db, test_user, test_wallet):
