@@ -215,7 +215,7 @@ function formatCurrency(amount: number) {
         <div class="mobile-modal-footer">
           <div class="flex gap-3">
             <button type="button" @click="showModal = false" class="flex-1 py-3 border border-gray-200 rounded-full font-medium hover:bg-gray-100 transition-colors text-base">取消</button>
-            <button type="submit" :disabled="submitting" class="flex-1 py-3 bg-gray-900 text-white rounded-full font-medium hover:opacity-85 transition-opacity disabled:opacity-50 text-base">{{ submitting ? '保存中...' : '保存' }}</button>
+            <button type="button" @click="handleSubmit" :disabled="submitting" class="flex-1 py-3 bg-gray-900 text-white rounded-full font-medium hover:opacity-85 transition-opacity disabled:opacity-50 text-base">{{ submitting ? '保存中...' : '保存' }}</button>
           </div>
         </div>
       </div>
@@ -257,7 +257,7 @@ function formatCurrency(amount: number) {
         <div class="mobile-modal-footer">
           <div class="flex gap-3">
             <button type="button" @click="showTransferModal = false" class="flex-1 py-3 border border-gray-200 rounded-full font-medium hover:bg-gray-100 transition-colors text-base">取消</button>
-            <button type="submit" class="flex-1 py-3 bg-gray-900 text-white rounded-full font-medium hover:opacity-85 transition-opacity text-base">转账</button>
+            <button type="button" @click="handleTransfer" class="flex-1 py-3 bg-gray-900 text-white rounded-full font-medium hover:opacity-85 transition-opacity text-base">转账</button>
           </div>
         </div>
       </div>
